@@ -108,6 +108,24 @@ export const postExchangeComment = async (exchangeId: string, author: { id: stri
         // Use RPC to increment comment count (more reliable)
         await supabase.rpc('increment_exchange_comment_count', { row_id: exchangeId });
 
+        // Create a notification for the exchange owner
+        const { data: exchange } = await supabase
+            .from(EXCHANGES_TABLE)
+            .select('user_id, have_course')
+            .eq('id', exchangeId)
+            .single();
+
+        if (exchange && exchange.user_id !== author.id) {
+            const { createNotification } = await import('./notifications');
+            await createNotification({
+                user_id: exchange.user_id,
+                type: 'comment',
+                title: 'New Comment',
+                content: `${author.name} commented on your ${exchange.have_course} exchange.`,
+                related_id: exchangeId,
+            });
+        }
+
         return mapSupabaseToComment(data);
     } catch (e) {
         console.error('Error posting comment:', e);
@@ -144,6 +162,25 @@ export const toggleExchangeLike = async (exchangeId: string, userId: string) => 
             .eq('id', exchangeId);
 
         if (updateError) return { success: false };
+
+        // Create a notification for the owner
+        const { data: exchangeData } = await supabase
+            .from(EXCHANGES_TABLE)
+            .select('user_id, have_course')
+            .eq('id', exchangeId)
+            .single();
+
+        if (exchangeData && exchangeData.user_id !== userId) {
+            const { createNotification } = await import('./notifications');
+            await createNotification({
+                user_id: exchangeData.user_id,
+                type: 'like',
+                title: 'New Like',
+                content: `Someone liked your ${exchangeData.have_course} exchange request!`,
+                related_id: exchangeId,
+            });
+        }
+
         return { success: true };
     } catch (e) {
         console.error('Error toggling like:', e);

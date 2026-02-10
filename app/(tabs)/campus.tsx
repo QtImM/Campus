@@ -2,93 +2,107 @@ import { useRouter } from 'expo-router';
 import { Building, Plus } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActionModal } from '../../components/campus/ActionModal';
 import { PostCard } from '../../components/campus/PostCard';
+import { Toast, ToastType } from '../../components/campus/Toast';
+import { getCurrentUser } from '../../services/auth';
+import { deletePost, fetchPosts, subscribeToPosts, togglePostLike } from '../../services/campus';
 import { Post, PostCategory } from '../../types';
 
 const CATEGORIES: PostCategory[] = ['All', 'Events', 'Reviews', 'Guides', 'Lost & Found'];
-
-// Mock posts for demo
-export const MOCK_POSTS: Post[] = [
-    {
-        id: '1',
-        authorId: 'user1',
-        authorName: '小明',
-        authorMajor: 'Computer Science',
-        content: '🎉 下周五有校园音乐节！AAB广场晚上7点开始，有兴趣的同学一起来啊！',
-        category: 'Events',
-        likes: 42,
-        comments: 2,
-        replies: [
-            { id: 'r1', authorName: '小红', content: '我也想去！是在AAB哪个广场？', createdAt: new Date(Date.now() - 1800000) },
-            { id: 'r2', authorName: '阿强', content: '去年我也去了，气氛超级棒！', createdAt: new Date(Date.now() - 900000) },
-        ],
-        createdAt: new Date(Date.now() - 3600000),
-        isAnonymous: false,
-    },
-    {
-        id: '2',
-        authorId: 'user2',
-        authorName: '匿名用户',
-        authorMajor: 'Anonymous',
-        content: '请问有人知道Shaw Tower的咖啡厅营业时间吗？周末开门吗？',
-        category: 'Guides',
-        likes: 15,
-        comments: 3,
-        createdAt: new Date(Date.now() - 7200000),
-        isAnonymous: true,
-    },
-    {
-        id: '3',
-        authorId: 'user3',
-        authorName: '图书馆猫咪观察员',
-        authorMajor: 'Media Studies',
-        content: '📚 今天在图书馆5楼发现了一只超可爱的橘猫！在window seat那边晒太阳，太治愈了～',
-        category: 'Reviews',
-        likes: 128,
-        comments: 24,
-        createdAt: new Date(Date.now() - 86400000),
-        isAnonymous: false,
-    },
-    {
-        id: '4',
-        authorId: 'user4',
-        authorName: '大四学长',
-        content: '失物招领：在CVA发现一个黑色双肩包，里面有笔记本电脑。联系我认领！',
-        category: 'Lost & Found',
-        likes: 8,
-        comments: 2,
-        createdAt: new Date(Date.now() - 172800000),
-        isAnonymous: false,
-    },
-];
 
 export default function CampusScreen() {
     const router = useRouter();
     const [activeCategory, setActiveCategory] = useState<PostCategory>('All');
     const [refreshing, setRefreshing] = useState(false);
-    const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ visible: boolean; message: string; type: ToastType }>({
+        visible: false,
+        message: '',
+        type: 'success'
+    });
 
-    const filteredPosts = activeCategory === 'All'
-        ? posts
-        : posts.filter(post => post.category === activeCategory);
-
-    const onRefresh = () => {
-        setRefreshing(true);
-        setTimeout(() => {
-            setRefreshing(false);
-        }, 1000);
+    const loadPosts = async () => {
+        try {
+            setLoading(true);
+            const user = await getCurrentUser();
+            setCurrentUser(user);
+            const data = await fetchPosts(activeCategory, user?.uid);
+            setPosts(data);
+        } catch (error) {
+            console.error('Error loading posts:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleCompose = () => {
-        router.push('/compose');
+    React.useEffect(() => {
+        loadPosts();
+
+        // Subscribe to changes
+        const unsubscribe = subscribeToPosts(() => {
+            loadPosts();
+        });
+
+        return () => unsubscribe();
+    }, [activeCategory]);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadPosts();
+        setRefreshing(false);
     };
 
     const handlePostPress = (postId: string) => {
-        router.push(`/campus/${postId}` as any);
+        router.push(`/campus/${postId}`);
     };
 
-    const handleFindClassroom = () => {
-        router.push('/classroom');
+    const handleCompose = () => {
+        router.push('/campus/compose');
+    };
+
+    const handleLike = async (postId: string) => {
+        try {
+            if (!currentUser) return;
+
+            await togglePostLike(postId, currentUser.uid);
+            // Local update for immediate feedback
+            setPosts(prev => prev.map(p =>
+                p.id === postId ? {
+                    ...p,
+                    isLiked: !p.isLiked,
+                    likes: p.isLiked ? p.likes - 1 : p.likes + 1
+                } : p
+            ));
+        } catch (error) {
+            console.error('Error liking post:', error);
+        }
+    };
+
+    const handleDeletePost = (postId: string) => {
+        setSelectedPostId(postId);
+        setDeleteModalVisible(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!selectedPostId) return;
+        try {
+            await deletePost(selectedPostId);
+            setToast({ visible: true, message: 'Post deleted successfully', type: 'success' });
+            // The list will refresh via loadPosts if realtime is working, 
+            // but let's filter locally for immediate feedback
+            setPosts(prev => prev.filter(p => p.id !== selectedPostId));
+        } catch (error) {
+            console.error('Error deleting post:', error);
+            setToast({ visible: true, message: 'Failed to delete post', type: 'error' });
+        } finally {
+            setDeleteModalVisible(false);
+            setSelectedPostId(null);
+        }
     };
 
     return (
@@ -98,21 +112,20 @@ export default function CampusScreen() {
                 <View style={styles.headerRow}>
                     <Text style={styles.headerTitle}>Campus Circle</Text>
                     <View style={styles.headerActions}>
-                        <TouchableOpacity style={styles.actionButton} onPress={handleFindClassroom}>
-                            <Building size={16} color="#4B0082" />
-                            <Text style={styles.actionText}>找教室</Text>
+                        <TouchableOpacity style={styles.actionButton}>
+                            <Building size={20} color="#1E3A8A" />
+                            <Text style={styles.actionText}>Campus</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </View>
 
-            {/* Category Filter */}
+            {/* Filter Tabs */}
             <View style={styles.filterContainer}>
                 <FlatList
+                    data={CATEGORIES}
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    data={CATEGORIES}
-                    keyExtractor={(item) => item}
                     contentContainerStyle={styles.filterList}
                     renderItem={({ item }) => (
                         <TouchableOpacity
@@ -135,31 +148,24 @@ export default function CampusScreen() {
 
             {/* Posts Feed */}
             <FlatList
-                data={filteredPosts}
+                data={posts}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.feedList}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor="#4B0082"
+                        tintColor="#1E3A8A"
                     />
                 }
                 renderItem={({ item }) => (
                     <PostCard
                         post={item}
                         onPress={() => handlePostPress(item.id)}
-                        onLike={() => {
-                            // Toggle like locally for demo
-                            setPosts(prev => prev.map(p =>
-                                p.id === item.id ? {
-                                    ...p,
-                                    isLiked: !p.isLiked,
-                                    likes: p.isLiked ? p.likes - 1 : p.likes + 1
-                                } : p
-                            ));
-                        }}
+                        onLike={() => handleLike(item.id)}
                         onComment={() => handlePostPress(item.id)}
+                        onDelete={() => handleDeletePost(item.id)}
+                        currentUserId={currentUser?.uid}
                     />
                 )}
                 ListEmptyComponent={
@@ -174,6 +180,22 @@ export default function CampusScreen() {
             <TouchableOpacity style={styles.fab} onPress={handleCompose}>
                 <Plus size={28} color="#fff" />
             </TouchableOpacity>
+
+            <ActionModal
+                visible={deleteModalVisible}
+                title="Delete Post"
+                message="Are you sure you want to delete this post? This action cannot be undone."
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteModalVisible(false)}
+                confirmText="Delete"
+            />
+
+            <Toast
+                visible={toast.visible}
+                message={toast.message}
+                type={toast.type}
+                onHide={() => setToast(prev => ({ ...prev, visible: false }))}
+            />
         </View>
     );
 }
@@ -251,7 +273,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#1E3A8A',
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#4B0082',
+        shadowColor: '#1E3A8A',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,

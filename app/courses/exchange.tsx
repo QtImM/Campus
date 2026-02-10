@@ -23,6 +23,7 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
+    Image,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -155,6 +156,10 @@ export default function ExchangeScreen() {
 
         setSubmitting(true);
         try {
+            // Fetch the detailed profile to get the real major
+            const { getUserProfile } = await import('../../services/auth');
+            const profile = await getUserProfile(user.uid);
+
             const contacts: ContactMethod[] = selectedMethods.map(m => ({
                 platform: m,
                 value: contactValues[m],
@@ -163,9 +168,9 @@ export default function ExchangeScreen() {
 
             await postExchange({
                 userId: user.uid,
-                userName: user.displayName || 'Anonymous',
-                userAvatar: user.photoURL || '👤',
-                userMajor: 'CS (Placeholder)',
+                userName: profile?.displayName || user.displayName || 'Anonymous User',
+                userAvatar: profile?.avatarUrl || user.photoURL || '👤',
+                userMajor: profile?.major || 'General Student',
                 haveCourse,
                 haveSection,
                 haveTeacher,
@@ -278,6 +283,15 @@ export default function ExchangeScreen() {
         }
     };
 
+    const renderAvatar = (avatar: string, style: any) => {
+        if (!avatar) return <Text style={style}>👤</Text>;
+        const isUrl = typeof avatar === 'string' && (avatar.startsWith('http') || avatar.startsWith('https'));
+        if (isUrl) {
+            return <Image source={{ uri: avatar }} style={style} />;
+        }
+        return <Text style={style}>{avatar}</Text>;
+    };
+
     const handleCopy = async (text: string, platform: string) => {
         await Clipboard.setStringAsync(text);
         Alert.alert('Copied', `${platform} ID copied to clipboard!`);
@@ -292,10 +306,10 @@ export default function ExchangeScreen() {
         <View style={styles.exchangeCard}>
             <View style={styles.cardHeader}>
                 <View style={styles.userInfo}>
-                    <Text style={styles.userAvatar}>{item.userAvatar}</Text>
-                    <View>
-                        <Text style={styles.userName}>{item.userName}</Text>
-                        <Text style={styles.userMajor}>{item.userMajor}</Text>
+                    {renderAvatar(item.userAvatar, styles.userAvatar)}
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.userName} numberOfLines={1}>{item.userName}</Text>
+                        <Text style={styles.userMajor} numberOfLines={1}>{item.userMajor}</Text>
                     </View>
                 </View>
                 <View style={styles.timeTag}>
@@ -765,7 +779,7 @@ export default function ExchangeScreen() {
                                         keyExtractor={(item) => item.id}
                                         renderItem={({ item }) => (
                                             <View style={styles.commentRow}>
-                                                <Text style={styles.commentAvatar}>{item.authorAvatar}</Text>
+                                                {renderAvatar(item.authorAvatar, styles.commentAvatar)}
                                                 <View style={styles.commentInfo}>
                                                     <Text style={styles.commentAuthor}>{item.authorName}</Text>
                                                     <Text style={styles.commentText}>{item.content}</Text>
@@ -913,7 +927,13 @@ const styles = StyleSheet.create({
     },
     userAvatar: {
         fontSize: 28,
+        width: 44,
+        height: 44,
         marginRight: 12,
+        borderRadius: 22,
+        textAlign: 'center',
+        textAlignVertical: 'center',
+        lineHeight: 44,
     },
     userName: {
         fontSize: 15,
@@ -1381,8 +1401,13 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     commentAvatar: {
-        fontSize: 28,
+        fontSize: 24,
+        width: 36,
+        height: 36,
         marginRight: 12,
+        borderRadius: 18,
+        textAlign: 'center',
+        lineHeight: 36,
     },
     commentInfo: {
         flex: 1,

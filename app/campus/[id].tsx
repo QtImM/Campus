@@ -1,7 +1,9 @@
+import { formatDistanceToNow } from 'date-fns';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, MessageCircle, Send } from 'lucide-react-native';
-import React, { useState } from 'react';
+import { ChevronLeft, MessageCircle, Send, Trash2 } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -13,45 +15,142 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { MOCK_POSTS } from '../(tabs)/campus';
+import { ActionModal } from '../../components/campus/ActionModal';
 import { PostCard } from '../../components/campus/PostCard';
+import { Toast, ToastType } from '../../components/campus/Toast';
+import { getCurrentUser } from '../../services/auth';
+import { addPostComment, deleteComment, deletePost, fetchPostById, fetchPostComments, togglePostLike } from '../../services/campus';
 import { Post } from '../../types';
 
 export default function PostDetailScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
 
-    // Find the post from mock data
-    const initialPost = MOCK_POSTS.find(p => p.id === id) || MOCK_POSTS[0];
-    const [post, setPost] = useState<Post>(initialPost);
+    const [post, setPost] = useState<Post | null>(null);
+    const [comments, setComments] = useState<any[]>([]);
     const [commentText, setCommentText] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+    const [currentUser, setCurrentUser] = useState<any>(null);
 
-    const handleLike = () => {
-        const isLiked = !post.isLiked;
-        setPost(prev => ({
-            ...prev,
-            isLiked,
-            likes: isLiked ? prev.likes + 1 : prev.likes - 1
-        }));
+    // UI State
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [deleteType, setDeleteType] = useState<'post' | 'comment'>('post');
+    const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ visible: boolean; message: string; type: ToastType }>({
+        visible: false,
+        message: '',
+        type: 'success'
+    });
+
+    const loadData = async () => {
+        if (!id) return;
+        try {
+            setLoading(true);
+            const user = await getCurrentUser();
+            setCurrentUser(user);
+            const postData = await fetchPostById(id as string, user?.uid);
+            if (postData) {
+                setPost(postData);
+                const commentsData = await fetchPostComments(id as string);
+                setComments(commentsData);
+            }
+        } catch (error) {
+            console.error('Error loading post details:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSendComment = () => {
-        if (!commentText.trim()) return;
+    useEffect(() => {
+        loadData();
+    }, [id]);
 
-        const newReply = {
-            id: Date.now().toString(),
-            authorName: 'Me',
-            content: commentText,
-            createdAt: new Date(),
-        };
+    const handleLike = async () => {
+        if (!post) return;
+        try {
+            if (!currentUser) return;
 
-        setPost(prev => ({
-            ...prev,
-            comments: prev.comments + 1,
-            replies: [...(prev.replies || []), newReply]
-        }));
-        setCommentText('');
-        Keyboard.dismiss();
+            await togglePostLike(post.id, currentUser.uid);
+            setPost(prev => prev ? {
+                ...prev,
+                isLiked: !prev.isLiked,
+                likes: prev.isLiked ? prev.likes - 1 : prev.likes + 1
+            } : null);
+        } catch (error) {
+            console.error('Error liking post:', error);
+        }
+    };
+
+    const handleSendComment = async () => {
+        if (!commentText.trim() || !post) return;
+
+        try {
+            setSubmitting(true);
+            if (!currentUser) return;
+
+            const newComment = await addPostComment({
+                postId: post.id,
+                authorId: currentUser.uid,
+                authorName: currentUser.displayName || 'Anonymous',
+                authorAvatar: currentUser.photoURL || undefined,
+                content: commentText.trim(),
+            });
+
+            if (newComment) {
+                setComments(prev => [...prev, newComment]);
+                setPost(prev => prev ? { ...prev, comments: prev.comments + 1 } : null);
+                setCommentText('');
+                Keyboard.dismiss();
+                setToast({ visible: true, message: 'Comment added!', type: 'success' });
+            }
+        } catch (error) {
+            console.error('Error adding comment:', error);
+            setToast({ visible: true, message: 'Failed to add comment', type: 'error' });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const triggerDeletePost = () => {
+        setDeleteType('post');
+        setDeleteModalVisible(true);
+    };
+
+    const triggerDeleteComment = (commentId: string) => {
+        setSelectedCommentId(commentId);
+        setDeleteType('comment');
+        setDeleteModalVisible(true);
+    };
+
+    const confirmDelete = async () => {
+        if (deleteType === 'post') {
+            if (!post) return;
+            try {
+                await deletePost(post.id);
+                setDeleteModalVisible(false);
+                setToast({ visible: true, message: 'Post deleted', type: 'success' });
+                setTimeout(() => router.back(), 1000);
+            } catch (error) {
+                console.error('Error deleting post:', error);
+                setToast({ visible: true, message: 'Failed to delete post', type: 'error' });
+                setDeleteModalVisible(false);
+            }
+        } else {
+            if (!selectedCommentId) return;
+            try {
+                await deleteComment(selectedCommentId);
+                setComments(prev => prev.filter(c => c.id !== selectedCommentId));
+                setPost(prev => prev ? { ...prev, comments: Math.max(0, prev.comments - 1) } : null);
+                setToast({ visible: true, message: 'Comment deleted', type: 'success' });
+            } catch (error) {
+                console.error('Error deleting comment:', error);
+                setToast({ visible: true, message: 'Failed to delete comment', type: 'error' });
+            } finally {
+                setDeleteModalVisible(false);
+                setSelectedCommentId(null);
+            }
+        }
     };
 
     return (
@@ -71,42 +170,67 @@ export default function PostDetailScreen() {
                 <View style={{ width: 24 }} />
             </View>
 
-            <ScrollView
-                style={styles.content}
-                contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
-            >
-                <PostCard
-                    post={post}
-                    onLike={handleLike}
-                />
-
-                <View style={styles.commentsHeader}>
-                    <Text style={styles.commentsTitle}>Comments ({post.comments})</Text>
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#1E3A8A" />
                 </View>
+            ) : !post ? (
+                <View style={styles.emptyComments}>
+                    <Text style={styles.emptyText}>Post not found.</Text>
+                </View>
+            ) : (
+                <ScrollView
+                    style={styles.content}
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <PostCard
+                        post={post}
+                        onLike={handleLike}
+                        onDelete={triggerDeletePost}
+                        currentUserId={currentUser?.uid}
+                    />
 
-                {post.replies && post.replies.length > 0 ? (
-                    <View style={styles.repliesList}>
-                        {post.replies.map(reply => (
-                            <View key={reply.id} style={styles.replyItem}>
-                                <View style={styles.replyAvatar}>
-                                    <Text style={styles.replyAvatarText}>{reply.authorName.charAt(0)}</Text>
-                                </View>
-                                <View style={styles.replyInfo}>
-                                    <Text style={styles.replyAuthor}>{reply.authorName}</Text>
-                                    <Text style={styles.replyContent}>{reply.content}</Text>
-                                    <Text style={styles.replyTime}>Just now</Text>
-                                </View>
-                            </View>
-                        ))}
+                    <View style={styles.commentsHeader}>
+                        <Text style={styles.commentsTitle}>Comments ({post.comments || 0})</Text>
                     </View>
-                ) : (
-                    <View style={styles.emptyComments}>
-                        <MessageCircle size={48} color="#D1D5DB" />
-                        <Text style={styles.emptyText}>No comments yet. Start the conversation!</Text>
-                    </View>
-                )}
-            </ScrollView>
+
+                    {comments && comments.length > 0 ? (
+                        <View style={styles.repliesList}>
+                            {comments.map(comment => (
+                                <View key={comment.id} style={styles.replyItem}>
+                                    <View style={styles.replyAvatar}>
+                                        <Text style={styles.replyAvatarText}>
+                                            {comment.author_name ? comment.author_name.charAt(0) : '?'}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.replyInfo}>
+                                        <View style={styles.commentHeaderRow}>
+                                            <Text style={styles.replyAuthor}>{comment.author_name}</Text>
+                                            {currentUser?.uid === comment.author_id && (
+                                                <TouchableOpacity
+                                                    onPress={() => triggerDeleteComment(comment.id)}
+                                                >
+                                                    <Trash2 size={16} color="#EF4444" />
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                        <Text style={styles.replyContent}>{comment.content}</Text>
+                                        <Text style={styles.replyTime}>
+                                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                                        </Text>
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    ) : (
+                        <View style={styles.emptyComments}>
+                            <MessageCircle size={48} color="#D1D5DB" />
+                            <Text style={styles.emptyText}>No comments yet. Start the conversation!</Text>
+                        </View>
+                    )}
+                </ScrollView>
+            )}
 
             {/* Sticky Input */}
             <View style={styles.inputWrapper}>
@@ -119,14 +243,34 @@ export default function PostDetailScreen() {
                         multiline
                     />
                     <TouchableOpacity
-                        style={[styles.sendButton, !commentText.trim() && styles.sendButtonDisabled]}
+                        style={[styles.sendButton, (!commentText.trim() || submitting) && styles.sendButtonDisabled]}
                         onPress={handleSendComment}
-                        disabled={!commentText.trim()}
+                        disabled={!commentText.trim() || submitting}
                     >
-                        <Send size={20} color={commentText.trim() ? "#1E3A8A" : "#9CA3AF"} />
+                        {submitting ? (
+                            <ActivityIndicator size="small" color="#1E3A8A" />
+                        ) : (
+                            <Send size={20} color={commentText.trim() ? "#1E3A8A" : "#9CA3AF"} />
+                        )}
                     </TouchableOpacity>
                 </View>
             </View>
+
+            <ActionModal
+                visible={deleteModalVisible}
+                title={deleteType === 'post' ? "Delete Post" : "Delete Comment"}
+                message={`Are you sure you want to delete this ${deleteType}? This action cannot be undone.`}
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteModalVisible(false)}
+                confirmText="Delete"
+            />
+
+            <Toast
+                visible={toast.visible}
+                message={toast.message}
+                type={toast.type}
+                onHide={() => setToast(prev => ({ ...prev, visible: false }))}
+            />
         </KeyboardAvoidingView>
     );
 }
@@ -135,6 +279,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F9FAFB',
+    },
+    loadingContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     header: {
         paddingTop: 56,
@@ -205,6 +354,11 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '700',
         color: '#111827',
+    },
+    commentHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 2,
     },
     replyContent: {

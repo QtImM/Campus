@@ -108,7 +108,7 @@ export const getCurrentUser = async () => {
     const isDemo = await isDemoMode();
     if (isDemo) {
         return {
-            uid: 'demo_user',
+            uid: 'd3b07384-dead-4bef-cafe-000000000000',
             displayName: 'Demo User',
             photoURL: 'https://ui-avatars.com/api/?name=Demo+User&background=random',
             isAnonymous: false,

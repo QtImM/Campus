@@ -1,17 +1,22 @@
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, MessageCircle } from 'lucide-react-native';
-import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Heart, MessageCircle, Trash2, X } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Dimensions, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Post } from '../../types';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface PostCardProps {
     post: Post;
     onLike?: () => void;
     onComment?: () => void;
     onPress?: () => void;
+    onDelete?: () => void;
+    currentUserId?: string;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment, onPress }) => {
+export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment, onPress, onDelete, currentUserId }) => {
+    const [zoomImage, setZoomImage] = useState<string | null>(null);
     const timeAgo = formatDistanceToNow(post.createdAt, { addSuffix: true });
 
     const categoryColors: Record<string, string> = {
@@ -19,6 +24,46 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment, onP
         'Reviews': '#4ECDC4',
         'Guides': '#FFE66D',
         'Lost & Found': '#95E1D3',
+    };
+
+    const renderImages = () => {
+        const images = post.images || (post.imageUrl ? [post.imageUrl] : []);
+        if (images.length === 0) return null;
+
+        if (images.length === 1) {
+            return (
+                <TouchableOpacity
+                    style={styles.imageContainer}
+                    onPress={() => setZoomImage(images[0])}
+                    activeOpacity={0.9}
+                >
+                    <Image
+                        source={{ uri: images[0] }}
+                        style={styles.image}
+                        resizeMode="cover"
+                    />
+                </TouchableOpacity>
+            );
+        }
+
+        return (
+            <View style={styles.multiImageContainer}>
+                {images.map((img, idx) => (
+                    <TouchableOpacity
+                        key={idx}
+                        style={[
+                            styles.gridImageWrapper,
+                            images.length === 2 && { width: '49%', aspectRatio: 1 },
+                            images.length === 3 && { width: '32%', aspectRatio: 1 }
+                        ]}
+                        onPress={() => setZoomImage(img)}
+                        activeOpacity={0.9}
+                    >
+                        <Image source={{ uri: img }} style={styles.gridImage} resizeMode="cover" />
+                    </TouchableOpacity>
+                ))}
+            </View>
+        );
     };
 
     return (
@@ -46,14 +91,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment, onP
             {/* Content */}
             <Text style={styles.content}>{post.content}</Text>
 
-            {/* Image if exists */}
-            {post.imageUrl && (
-                <Image
-                    source={{ uri: post.imageUrl }}
-                    style={styles.image}
-                    resizeMode="cover"
-                />
-            )}
+            {/* Images */}
+            {renderImages()}
 
             {/* Actions */}
             <View style={styles.actions}>
@@ -69,7 +108,35 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment, onP
                     <MessageCircle size={20} color="#6B7280" />
                     <Text style={styles.actionText}>{post.comments}</Text>
                 </TouchableOpacity>
+
+                {currentUserId === post.authorId && (
+                    <TouchableOpacity
+                        style={[styles.actionButton, { marginLeft: 'auto', marginRight: 0 }]}
+                        onPress={onDelete}
+                    >
+                        <Trash2 size={20} color="#EF4444" />
+                    </TouchableOpacity>
+                )}
             </View>
+
+            {/* Image Zoom Modal */}
+            <Modal visible={!!zoomImage} transparent={true} animationType="fade">
+                <View style={styles.modalContainer}>
+                    <TouchableOpacity
+                        style={styles.modalCloseButton}
+                        onPress={() => setZoomImage(null)}
+                    >
+                        <X size={30} color="#fff" />
+                    </TouchableOpacity>
+                    {zoomImage && (
+                        <Image
+                            source={{ uri: zoomImage }}
+                            style={styles.modalImage}
+                            resizeMode="contain"
+                        />
+                    )}
+                </View>
+            </Modal>
         </TouchableOpacity>
     );
 };
@@ -134,11 +201,50 @@ const styles = StyleSheet.create({
         color: '#374151',
         marginBottom: 12,
     },
+    imageContainer: {
+        width: '100%',
+        height: 220,
+        borderRadius: 12,
+        backgroundColor: '#F3F4F6',
+        marginBottom: 12,
+        overflow: 'hidden',
+    },
     image: {
         width: '100%',
-        height: 200,
-        borderRadius: 12,
+        height: '100%',
+    },
+    multiImageContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
         marginBottom: 12,
+    },
+    gridImageWrapper: {
+        borderRadius: 8,
+        overflow: 'hidden',
+        backgroundColor: '#F3F4F6',
+        marginBottom: 4,
+    },
+    gridImage: {
+        width: '100%',
+        height: '100%',
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalCloseButton: {
+        position: 'absolute',
+        top: 60,
+        right: 20,
+        zIndex: 10,
+        padding: 10,
+    },
+    modalImage: {
+        width: SCREEN_WIDTH,
+        height: SCREEN_HEIGHT * 0.8,
     },
     actions: {
         flexDirection: 'row',

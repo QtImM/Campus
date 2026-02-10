@@ -27,20 +27,49 @@ create table public.posts (
   author_id uuid references public.users(id),
   author_name text,
   author_avatar text,
+  author_major text,
   author_tags jsonb,
   images jsonb,
   location_tag text,
   lat float,
   lng float,
   likes int default 0,
+  comments_count int default 0,
+  is_anonymous boolean default false,
   created_at timestamptz default now()
 );
 
 -- 开启帖子表安全策略
 alter table public.posts enable row level security;
 create policy "Posts are viewable by everyone." on public.posts for select using ( true );
-create policy "Authenticated users can insert posts." on public.posts for insert with check ( auth.role() = 'authenticated' );
+create policy "Authenticated users or demo user can insert posts." on public.posts for insert with check ( auth.role() = 'authenticated' or author_id = 'd3b07384-dead-4bef-cafe-000000000000' );
 create policy "Users can update own posts." on public.posts for update using ( auth.uid() = author_id );
+
+-- 新增：帖子评论表
+create table public.post_comments (
+  id uuid default gen_random_uuid() primary key,
+  post_id uuid references public.posts(id) on delete cascade,
+  author_id uuid references public.users(id),
+  author_name text not null,
+  author_avatar text,
+  content text not null,
+  created_at timestamptz default now()
+);
+alter table public.post_comments enable row level security;
+create policy "Comments are viewable by everyone." on public.post_comments for select using ( true );
+create policy "Authenticated users or demo user can comment." on public.post_comments for insert with check ( auth.role() = 'authenticated' or author_id = 'd3b07384-dead-4bef-cafe-000000000000' );
+
+-- 新增：帖子点赞表
+create table public.post_likes (
+  post_id uuid references public.posts(id) on delete cascade,
+  user_id uuid references public.users(id),
+  created_at timestamptz default now(),
+  primary key (post_id, user_id)
+);
+alter table public.post_likes enable row level security;
+create policy "Likes are viewable by everyone." on public.post_likes for select using ( true );
+create policy "Authenticated users or demo user can like." on public.post_likes for insert with check ( auth.role() = 'authenticated' or user_id = 'd3b07384-dead-4bef-cafe-000000000000' );
+create policy "Users or demo user can unlike." on public.post_likes for delete using ( auth.uid() = user_id or user_id = 'd3b07384-dead-4bef-cafe-000000000000' );
 
 -- 3. 创建互动表 (Interactions: Poke/Wave) - 可选
 create table public.interactions (
