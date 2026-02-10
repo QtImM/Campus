@@ -105,8 +105,8 @@ export const postExchangeComment = async (exchangeId: string, author: { id: stri
 
         if (error) throw error;
 
-        // Increment comment count
-        await incrementExchangeCommentCount(exchangeId);
+        // Use RPC to increment comment count (more reliable)
+        await supabase.rpc('increment_exchange_comment_count', { row_id: exchangeId });
 
         return mapSupabaseToComment(data);
     } catch (e) {
@@ -181,24 +181,7 @@ const mapSupabaseToComment = (data: any): ExchangeComment => ({
     createdAt: new Date(data.created_at),
 });
 
-const incrementExchangeCommentCount = async (exchangeId: string) => {
-    try {
-        const { data: exchange } = await supabase
-            .from(EXCHANGES_TABLE)
-            .select('comment_count')
-            .eq('id', exchangeId)
-            .single();
-
-        if (exchange) {
-            await supabase
-                .from(EXCHANGES_TABLE)
-                .update({ comment_count: (exchange.comment_count || 0) + 1 })
-                .eq('id', exchangeId);
-        }
-    } catch (e) {
-        console.error('Error incrementing comment count:', e);
-    }
-};
+// incrementExchangeCommentCount removed in favor of rpc call
 
 /**
  * Mock data for development.
