@@ -2,9 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Building, ChevronDown, Crosshair, Heart, Image as ImageIcon, MapPin, MapPinOff, MessageCircle, Plus, Utensils, X } from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Building, Crosshair, Heart, Image as ImageIcon, MapPin, MapPinOff, MessageCircle, Plus, Utensils, X } from 'lucide-react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -24,7 +24,9 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { CAMPUS_BUILDINGS } from '../../data/buildings';
+import { getCurrentUser } from '../../services/auth';
 import { getBuildings } from '../../services/buildings';
+import { fetchPosts } from '../../services/campus';
 import { CAMPUS_LOCATIONS } from '../../services/locations';
 import { CampusLocation } from '../../types';
 import { compressImage } from '../../utils/image';
@@ -46,49 +48,6 @@ const FILTERS: { id: FilterType; label: string; color: string; bg: string }[] = 
     { id: 'mine', label: 'My Pins', color: '#FFEB3B', bg: '#FFF9C4' },      // Yellow
 ];
 
-// Helper to generate random coordinates near HKBU
-const randomLoc = () => ({
-    lat: HKBU_CENTER.lat + (Math.random() - 0.5) * 0.005,
-    lng: HKBU_CENTER.lng + (Math.random() - 0.5) * 0.005
-});
-
-// Helper to create mock posts
-const createMockPosts = (count: number, type: FilterType) => {
-    return Array.from({ length: count }).map((_, i) => {
-        const filter = FILTERS.find(f => f.id === type)!;
-        return {
-            id: `${type}_${i}`,
-            author: { name: `User ${Math.floor(Math.random() * 1000)}`, avatar: '👤' },
-            category: type === 'hottest' ? 'Trending' : type === 'viewed' ? 'Popular' : 'General',
-            time: `${Math.floor(Math.random() * 24)}h ago`,
-            content: `This is a mock post for ${type} filter. Item #${i + 1}.`,
-            location: { name: `Location ${i}`, ...randomLoc() },
-            color: filter.bg, // Card background color
-            pinColor: filter.color, // Map marker color
-            type,
-            likes: Math.floor(Math.random() * 50),
-            isLiked: false,
-            // Generate some random comments
-            commentList: Array.from({ length: Math.floor(Math.random() * 4) }).map((_, j) => ({
-                id: `c_${i}_${j}`,
-                author: `User ${Math.floor(Math.random() * 1000)}`,
-                content: j % 2 === 0 ? "Great spot! 🤩" : "Thanks for sharing.",
-                time: `${Math.floor(Math.random() * 5)}h ago`
-            })),
-            get comments() {
-                return this.commentList.length; // Sync count with list
-            }
-        };
-    });
-};
-
-const MOCK_DATA = {
-    newest: createMockPosts(20, 'newest'),
-    hottest: createMockPosts(20, 'hottest'),
-    viewed: createMockPosts(20, 'viewed'),
-    mine: createMockPosts(5, 'mine'), // Fewer posts for "Mine"
-};
-
 // Generate Leaflet HTML with markers
 const generateMapHTML = (
     posts: any[],
@@ -97,15 +56,16 @@ const generateMapHTML = (
     showFoodMap: boolean = false,
     showBuildingMap: boolean = false,
     editMode: boolean = false,
-    userLoc: { lat: number, lng: number } | null = null,
     navTarget: { lat: number, lng: number } | null = null,
-    isNavigating: boolean = false
+    isNavigating: boolean = false,
+    currentUserId: string | null = null
 ): string => {
     // Pin SVG Template (Teardrop shape like standard marker)
-    const pinSvg = (color: string) => `
+    const pinSvg = (color: string, isMine: boolean = false) => `
         <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.3));">
-            <path d="M12 0C5.37258 0 0 5.37258 0 12C0 21 12 32 12 32C12 32 24 21 24 12C24 5.37258 18.6274 0 12 0Z" fill="${color}"/>
+            <path d="M12 0C5.37258 0 0 5.37258 0 12C0 21 12 32 12 32C12 32 24 21 24 12C24 5.37258 18.6274 0 12 0Z" fill="${isMine ? '#FF4500' : color}"/>
             <circle cx="12" cy="12" r="4" fill="white" fill-opacity="0.9"/>
+            ${isMine ? '<circle cx="12" cy="12" r="6" stroke="white" stroke-width="1.5" fill="none"/>' : ''}
         </svg>
     `;
 
@@ -187,33 +147,39 @@ const generateMapHTML = (
 
     const markers = posts.map(post => {
         if (!post || !post.location) return '';
+        const isMine = !!(currentUserId && post.authorId === currentUserId);
+        const color = isMine ? '#FF4500' : (post.pinColor || '#2196F3');
+
         return `
         L.marker([${post.location.lat}, ${post.location.lng}], { 
             icon: L.divIcon({
                 className: 'custom-pin-icon',
-                html: \`${pinSvg(post.pinColor)}\`,
+                html: \`${pinSvg(color, isMine)}\`,
                 iconSize: [24, 32],
-                iconAnchor: [12, 32], // Bottom tip center
+                iconAnchor: [12, 32],
                 popupAnchor: [0, -32]
             }) 
         })
-        .addTo(markerLayer) // Add to layer instead of map
+        .addTo(markerLayer)
         .bindPopup(\`
-            <div style="min-width: 150px;">
-                <div style="font-weight: bold; margin-bottom: 4px; color: ${post.pinColor || '#333'};">
-                    ${post.author?.avatar || '👤'} ${post.category || ''}
+            <div style="min-width: 150px; padding: 2px;">
+                <div style="font-weight: bold; margin-bottom: 4px; color: ${color};">
+                    ${post.authorName || 'User'} • ${post.category || 'General'}
                 </div>
-                <div style="fontSize: 12px; color: #666; margin-bottom: 6px;">
-                    ${post.time || ''}
+                <div style="font-size: 11px; color: #888; margin-bottom: 6px;">
+                    ${post.time || 'Just now'}
                 </div>
-                <div style="fontSize: 13px; line-height: 1.4;">
-                    ${post.content || ''}
+                <div style="font-size: 13px; line-height: 1.4; color: #333;">
+                    ${post.content ? post.content.replace(/`/g, "\\`").replace(/'/g, "\\'").replace(/\n/g, '<br/>') : ''}
                 </div>
-                <div style="fontSize: 11px; color: #888; margin-top: 6px;">
-                    📍 ${post.location?.name || ''}
+                ${post.locationTag ? `<div style="font-size: 11px; color: #1E3A8A; margin-top: 6px; font-weight: 600;">📍 ${post.locationTag}</div>` : ''}
+                <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #eee; pt: 8px;">
+                     <span style="font-size: 11px;">❤️ ${post.likes || 0}</span>
+                     <span style="font-size: 11px;">💬 ${post.comments || 0}</span>
                 </div>
             </div>
-        \`);`;
+        \`, { closeButton: false, offset: [0, -20] });
+        `;
     }).join('\n');
 
     const foodMarkers = foodSpots.map(spot => {
@@ -354,9 +320,15 @@ const generateMapHTML = (
 <body>
     <div id="map"></div>
     <script>
+        // Initial View: Prioritize Navigation Target, then HKBU Center
+        const initialLat = ${navTarget?.lat || HKBU_CENTER.lat};
+        const initialLng = ${navTarget?.lng || HKBU_CENTER.lng};
+        const initialZoom = ${navTarget ? 18 : 17};
+
         var map = L.map('map', {
-            zoomControl: false
-        }).setView([${HKBU_CENTER.lat}, ${HKBU_CENTER.lng}], 17);
+            zoomControl: false,
+            attributionControl: false
+        }).setView([initialLat, initialLng], initialZoom);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap'
@@ -511,19 +483,12 @@ const generateMapHTML = (
             }
         };
 
-        // --- Initial State Injection ---
+        // --- Initial State Injection (Navigation Path) ---
         
-        // 1. Initial User Location
-        if (${userLoc ? 'true' : 'false'}) {
+        if (${isNavigating && navTarget ? 'true' : 'false'}) {
             try {
-                window.updateUserLocation(${userLoc?.lat || 0}, ${userLoc?.lng || 0});
-            } catch(e) { console.error('Initial location failed', e); }
-        }
-
-        // 2. Initial Navigation Path
-        if (${isNavigating && userLoc && navTarget ? 'true' : 'false'}) {
-            try {
-                window.drawNavigationPath(${userLoc?.lat || 0}, ${userLoc?.lng || 0}, ${navTarget?.lat || 0}, ${navTarget?.lng || 0});
+                // Initial path setup (user marker will be added by injectJavaScript later)
+                // window.drawNavigationPath is called from React when userLoc is available
             } catch(e) { console.error('Initial path failed', e); }
         }
     </script>
@@ -536,7 +501,6 @@ export default function MapScreen() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const [activeFilter, setActiveFilter] = useState<FilterType>('newest');
-    const [selectedCampus, setSelectedCampus] = useState('HKBU (本部校区)');
     const [selectedPost, setSelectedPost] = useState<any>(null);
     const [heading, setHeading] = useState<number>(0);
     const [pendingLocation, setPendingLocation] = useState<{ lat: number, lng: number } | null>(null);
@@ -544,6 +508,9 @@ export default function MapScreen() {
     const [markersVisible, setMarkersVisible] = useState(true);
     const [showFoodMap, setShowFoodMap] = useState(false);
     const [showBuildingMap, setShowBuildingMap] = useState(false);
+    const [posts, setPosts] = useState<any[]>([]);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [loadingPosts, setLoadingPosts] = useState(true);
     const [editMode, setEditMode] = useState(false);
     const [buildingsData, setBuildingsData] = useState(CAMPUS_BUILDINGS);
     const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
@@ -601,41 +568,44 @@ export default function MapScreen() {
         }
     }, [isNavigating, navTarget, userLocation]);
 
-    // Load buildings from Supabase on mount
+    const loadPostsData = useCallback(async () => {
+        try {
+            setLoadingPosts(true);
+            const user = await getCurrentUser();
+            setCurrentUserId(user?.uid || null);
+            // Fetch all posts first, filter locally for categories
+            const data = await fetchPosts('All', user?.uid);
+            setPosts(data || []);
+        } catch (e) {
+            console.error('Error loading posts for map:', e);
+        } finally {
+            setLoadingPosts(false);
+        }
+    }, []);
+
     useEffect(() => {
         const loadBuildings = async () => {
             try {
-                // 1. Try fetching from Supabase first (precision data)
                 const cloudBuildings = await getBuildings();
                 if (cloudBuildings && cloudBuildings.length > 0) {
-                    console.log('Successfully fetched buildings from Supabase');
                     setBuildingsData(cloudBuildings);
                     return;
                 }
             } catch (e) {
-                console.warn("Failed to fetch from Supabase, falling back to local storage/static", e);
-            }
-
-            // 2. Fallback to Local Storage or Static
-            try {
-                const savedData = await AsyncStorage.getItem('savedBuildingsData');
-                if (savedData) {
-                    const parsed = JSON.parse(savedData);
-                    const mergedData = CAMPUS_BUILDINGS.map(defaultB => {
-                        const savedB = parsed.find((p: any) => p.id === defaultB.id);
-                        if (savedB) {
-                            return { ...defaultB, coordinates: savedB.coordinates };
-                        }
-                        return defaultB;
-                    });
-                    setBuildingsData(mergedData);
-                }
-            } catch (e) {
-                console.error("Failed to load saved buildings", e);
+                console.warn("Failed to fetch buildings from Supabase", e);
             }
         };
+
         loadBuildings();
-    }, []);
+        loadPostsData();
+    }, [loadPostsData]);
+
+    // Refresh data when screen is focused
+    useFocusEffect(
+        useCallback(() => {
+            loadPostsData();
+        }, [loadPostsData])
+    );
 
     // Save to storage whenever buildingsData changes (debounced or on key events)
     // For simplicity, we'll save on drag end (which updates state) and on export.
@@ -667,13 +637,44 @@ export default function MapScreen() {
             }
         }
 
-        startHeadingTrack();
-        return () => {
-            if (headingSubscription) {
-                headingSubscription.remove();
+        let positionSubscription: Location.LocationSubscription | null = null;
+        async function startLocationTrack() {
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status !== 'granted') return;
+
+                positionSubscription = await Location.watchPositionAsync(
+                    { accuracy: Location.Accuracy.Balanced, distanceInterval: 5 },
+                    (location) => {
+                        const { latitude, longitude } = location.coords;
+                        setUserLocation({ lat: latitude, lng: longitude });
+                    }
+                );
+            } catch (err) {
+                console.log('Location track error:', err);
             }
+        }
+
+        startHeadingTrack();
+        startLocationTrack();
+
+        return () => {
+            if (headingSubscription) headingSubscription.remove();
+            if (positionSubscription) positionSubscription.remove();
         };
     }, []);
+
+    // Sync userLocation with WebView (without re-centering)
+    React.useEffect(() => {
+        if (userLocation && webViewRef.current) {
+            webViewRef.current.injectJavaScript(`
+                if (window.updateUserLocation) {
+                    window.updateUserLocation(${userLocation.lat}, ${userLocation.lng});
+                }
+                true;
+            `);
+        }
+    }, [userLocation]);
 
     // Sync heading with WebView
     React.useEffect(() => {
@@ -729,14 +730,58 @@ export default function MapScreen() {
         `);
     }, [showBuildingMap]);
 
-    // Filter data based on navigation state
-    const currentPosts = isNavigating ? [] : MOCK_DATA[activeFilter];
-    const currentFoodSpots = isNavigating ? [] : (CAMPUS_LOCATIONS || []).filter(l => l.category === 'Food');
-    // For buildings, if navigating, only show the target building if possible (we don't have ID easily, so maybe show all or try to filter by coordinate match)
-    // Actually, we can filter by coordinate match since navTarget has lat/lng
-    const currentBuildings = isNavigating && navTarget
-        ? buildingsData.filter(b => Math.abs(b.coordinates.latitude - navTarget.lat) < 0.0001 && Math.abs(b.coordinates.longitude - navTarget.lng) < 0.0001)
-        : buildingsData;
+    // Filter data based on active filter and navigation state
+    const currentPosts = useMemo(() => {
+        let filtered = isNavigating ? [] : (posts || []).filter(p => {
+            if (activeFilter === 'newest') return true;
+            if (activeFilter === 'mine') return !!(currentUserId && p.authorId === currentUserId);
+            return true;
+        });
+
+        if (activeFilter === 'hottest') {
+            return [...filtered].sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        }
+        if (activeFilter === 'viewed') {
+            return [...filtered].sort((a, b) => (b.views || 0) - (a.views || 0));
+        }
+        return filtered;
+    }, [posts, activeFilter, currentUserId, isNavigating]);
+
+    const currentFoodSpots = useMemo(() => {
+        return isNavigating ? [] : (CAMPUS_LOCATIONS || []).filter(l => l.category === 'Food');
+    }, [isNavigating]);
+
+    // For buildings, if navigating, only show the target building if possible
+    const currentBuildings = useMemo(() => {
+        return isNavigating && navTarget
+            ? buildingsData.filter(b => Math.abs(b.coordinates.latitude - navTarget.lat) < 0.0001 && Math.abs(b.coordinates.longitude - navTarget.lng) < 0.0001)
+            : buildingsData;
+    }, [buildingsData, isNavigating, navTarget]);
+
+    // Memoize the HTML to prevent reloads when location/heading changes
+    const mapHtml = useMemo(() => {
+        return generateMapHTML(
+            currentPosts,
+            currentFoodSpots,
+            currentBuildings,
+            showFoodMap,
+            showBuildingMap,
+            editMode,
+            navTarget,
+            isNavigating,
+            currentUserId
+        );
+    }, [
+        currentPosts,
+        currentFoodSpots,
+        currentBuildings,
+        showFoodMap,
+        showBuildingMap,
+        editMode,
+        navTarget,
+        isNavigating,
+        currentUserId
+    ]);
 
     const handleLocationPress = async (autoCenter = true) => {
         setLocating(true);
@@ -753,14 +798,20 @@ export default function MapScreen() {
             const { latitude, longitude } = location.coords;
 
             // 3. Update Map via JS injection
-            webViewRef.current?.injectJavaScript(`
-                window.updateUserLocation(${latitude}, ${longitude});
-                ${autoCenter ? `window.centerMap(${latitude}, ${longitude});` : ''}
-                true;
-            `);
+            // Using a small timeout to ensure the WebView has finished any pending re-renders
+            setTimeout(() => {
+                webViewRef.current?.injectJavaScript(`
+                    if (window.updateUserLocation) {
+                        window.updateUserLocation(${latitude}, ${longitude});
+                    }
+                    if (${autoCenter} && window.centerMap) {
+                        window.centerMap(${latitude}, ${longitude});
+                    }
+                    true;
+                `);
+            }, 100);
 
-            setPendingLocation({ lat: latitude, lng: longitude });
-            setUserLocation({ lat: latitude, lng: longitude }); // Update user location state
+            setUserLocation({ lat: latitude, lng: longitude }); // Update state to persist through reloads
         } catch (error) {
             Alert.alert('Error', 'Could not fetch location');
         } finally {
@@ -771,7 +822,7 @@ export default function MapScreen() {
     const handleAddPost = () => {
         if (pendingLocation) {
             router.push({
-                pathname: '/compose',
+                pathname: '/campus/compose',
                 params: {
                     lat: pendingLocation.lat,
                     lng: pendingLocation.lng,
@@ -785,23 +836,12 @@ export default function MapScreen() {
                 'Tap on the map to pin a specific location, or post without a location?',
                 [
                     { text: 'Pin on Map First', style: 'cancel' },
-                    { text: 'Post Anyway', onPress: () => router.push('/compose') }
+                    { text: 'Post Anyway', onPress: () => router.push('/campus/compose') }
                 ]
             );
         }
     };
 
-    const handleCampusSelect = () => {
-        Alert.alert(
-            '选择校区',
-            '请选择您的校区',
-            [
-                { text: 'HKBU (本部校区)', onPress: () => setSelectedCampus('HKBU (本部校区)') },
-                { text: 'HKBU (石门校区)', onPress: () => setSelectedCampus('HKBU (石门校区)') },
-                { text: '取消', style: 'cancel' },
-            ]
-        );
-    };
 
     const handleFindClassroom = () => {
         router.push('/classroom' as any);
@@ -935,17 +975,7 @@ export default function MapScreen() {
                 key={isNavigating ? 'nav_mode' : 'normal_mode'} // Only reload when entering/exiting nav
                 originWhitelist={['*']}
                 source={{
-                    html: generateMapHTML(
-                        currentPosts,
-                        currentFoodSpots,
-                        currentBuildings,
-                        showFoodMap,
-                        showBuildingMap,
-                        editMode,
-                        userLocation,
-                        navTarget,
-                        isNavigating
-                    )
+                    html: mapHtml
                 }}
                 style={styles.map}
                 onMessage={handleWebViewMessage}
@@ -962,38 +992,36 @@ export default function MapScreen() {
             {/* Header Overlay */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    <Text style={styles.headerTitle}>Campus</Text>
-                    <TouchableOpacity style={styles.campusSelector} onPress={handleCampusSelect}>
-                        <Text style={styles.campusText}>{selectedCampus.split(' ')[0]}</Text>
-                        <ChevronDown size={14} color="#333" />
+                    <Text style={styles.headerTitle} numberOfLines={1}>Campus</Text>
+                </View>
+                <View style={styles.headerRight}>
+                    <TouchableOpacity
+                        style={[
+                            styles.foodMapBadge,
+                            showFoodMap ? styles.foodMapBadgeActive : styles.foodMapBadgeInactive
+                        ]}
+                        onPress={() => setShowFoodMap(!showFoodMap)}
+                    >
+                        <Utensils size={18} color={showFoodMap ? "#fff" : "#FF6B6B"} />
+                        <Text style={[styles.foodMapBadgeText, showFoodMap && { color: '#fff' }]}>
+                            {showFoodMap ? '美食: 开' : '美食'}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.foodMapBadge,
+                            { marginLeft: 8 },
+                            showBuildingMap ? { backgroundColor: '#4B0082', borderColor: '#4B0082' } : styles.foodMapBadgeInactive
+                        ]}
+                        onPress={() => setShowBuildingMap(!showBuildingMap)}
+                    >
+                        <Building size={16} color={showBuildingMap ? "#fff" : "#4B0082"} />
+                        <Text style={[styles.foodMapBadgeText, showBuildingMap && { color: '#fff' }]}>
+                            {showBuildingMap ? '建筑: 开' : '建筑'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                    style={[
-                        styles.foodMapBadge,
-                        showFoodMap ? styles.foodMapBadgeActive : styles.foodMapBadgeInactive
-                    ]}
-                    onPress={() => setShowFoodMap(!showFoodMap)}
-                >
-                    <Utensils size={18} color={showFoodMap ? "#fff" : "#FF6B6B"} />
-                    <Text style={[styles.foodMapBadgeText, showFoodMap && { color: '#fff' }]}>
-                        {showFoodMap ? '美食地图: 开' : '美食地图'}
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[
-                        styles.foodMapBadge,
-                        { marginLeft: 8 }, // Add margin
-                        showBuildingMap ? { backgroundColor: '#4B0082', borderColor: '#4B0082' } : styles.foodMapBadgeInactive
-                    ]}
-                    onPress={() => setShowBuildingMap(!showBuildingMap)}
-                >
-                    <Building size={16} color={showBuildingMap ? "#fff" : "#4B0082"} />
-                    <Text style={[styles.foodMapBadgeText, showBuildingMap && { color: '#fff' }]}>
-                        {showBuildingMap ? '建筑地图: 开' : '建筑地图'}
-                    </Text>
-                </TouchableOpacity>
             </View>
 
 
@@ -1309,9 +1337,14 @@ const styles = StyleSheet.create({
         zIndex: 100,
     },
     headerLeft: {
+        flexShrink: 0,
+        marginRight: 10,
+    },
+    headerRight: {
         flex: 1,
-        flexDirection: 'column',
-        alignItems: 'flex-start',
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
     },
     headerTitle: {
         fontSize: 28,
@@ -1321,25 +1354,6 @@ const styles = StyleSheet.create({
         textShadowOffset: { width: 0, height: 1 },
         textShadowRadius: 4,
         marginBottom: 8,
-    },
-    campusSelector: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    campusText: {
-        fontSize: 13,
-        color: '#333',
-        fontWeight: '500',
-        marginRight: 4,
     },
     iconButton: {
         width: 50,

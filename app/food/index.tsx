@@ -25,23 +25,24 @@ import Animated, {
     useSharedValue,
     withSpring
 } from 'react-native-reanimated';
+import { getCurrentUser } from '../../services/auth';
+import { addFoodReview, fetchFoodReviews, toggleFoodReviewLike, uploadFoodImage } from '../../services/food';
 
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 48) / 2;
 
 interface Review {
     id: string;
-    title: string;
     outletId: string;
-    location: string;
-    image: any;
-    author: string;
+    authorId: string;
+    authorName: string;
+    authorAvatar?: string;
     rating: number;
     likes: number;
-    isLiked: boolean;
-    time: string;
+    isLiked?: boolean;
     content: string;
-    replies: Array<{
+    createdAt: string;
+    replies?: Array<{
         id: string;
         author: string;
         content: string;
@@ -49,65 +50,8 @@ interface Review {
     }>;
 }
 
-// Mock Food Data
-const FOOD_POSTS: Review[] = [
-    {
-        id: '1',
-        title: '',
-        outletId: 'o1',
-        location: 'Main Canteen',
-        image: 'https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=500&q=60',
-        author: '小明',
-        rating: 4.5,
-        likes: 32,
-        isLiked: false,
-        time: '1 hour ago',
-        content: 'The condensed milk topping is just perfect. Best breakfast in campus!',
-        replies: []
-    },
-    {
-        id: '2',
-        title: '',
-        outletId: 'o2',
-        location: 'iCafe (Pacific Coffee)',
-        image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=60',
-        author: 'CoffeeLover',
-        rating: 4.8,
-        likes: 45,
-        isLiked: false,
-        time: '3 hours ago',
-        content: 'Smooth and refreshing. A bit pricey but worth it for the study vibes.',
-        replies: []
-    },
-    {
-        id: '3',
-        title: '',
-        outletId: 'o13',
-        location: 'BU Fiesta',
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=500&q=60',
-        author: 'GreenLife',
-        rating: 4.2,
-        likes: 18,
-        isLiked: false,
-        time: '5 hours ago',
-        content: 'Fresh ingredients and generous portions. Perfect for a healthy lunch.',
-        replies: []
-    },
-    {
-        id: '4',
-        title: '',
-        outletId: 'o7',
-        location: 'Nan Yuan',
-        image: 'https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=500&q=60',
-        author: 'NightOwl',
-        rating: 4.0,
-        likes: 24,
-        isLiked: false,
-        time: '昨天',
-        content: 'Authentic taste. The bun is so fluffy!',
-        replies: []
-    },
-];
+// Mock Food Data (Deprecated, use Supabase)
+const FOOD_POSTS: Review[] = [];
 
 // Official Dining Outlets Data
 const DINING_OUTLETS = [
@@ -243,9 +187,10 @@ export default function FoodScreen() {
     const [isMapVisible, setIsMapVisible] = React.useState(false);
     const reviewsListRef = useRef<FlatList>(null);
 
-    // Food Reviews State
-    const [reviews, setReviews] = React.useState<Review[]>(FOOD_POSTS);
+    const [reviews, setReviews] = React.useState<Review[]>([]);
+    const [loading, setLoading] = React.useState(true);
     const [isAddModalVisible, setIsAddModalVisible] = React.useState(false);
+    const [currentUser, setCurrentUser] = React.useState<any>(null);
 
     // New Review State
     const [newLocation, setNewLocation] = React.useState('Main Canteen');
@@ -256,6 +201,26 @@ export default function FoodScreen() {
     // Reply State
     const [replyingToId, setReplyingToId] = React.useState<string | null>(null);
     const [replyText, setReplyText] = React.useState('');
+
+    const loadReviews = async () => {
+        try {
+            setLoading(true);
+            const user = await getCurrentUser();
+            setCurrentUser(user);
+            const data = await fetchFoodReviews(undefined, user?.uid);
+            setReviews(data);
+        } catch (error) {
+            console.error('Error fetching global food reviews:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        if (activeTab === 'reviews') {
+            loadReviews();
+        }
+    }, [activeTab]);
 
     // Zoom State
     const scale = useSharedValue(1);
@@ -315,18 +280,47 @@ export default function FoodScreen() {
         setIsAddModalVisible(true);
     };
 
-    const handleLike = (id: string) => {
-        setReviews(prev => prev.map(post => {
-            if (post.id === id) {
-                const isLiked = (post as any).isLiked;
-                return {
-                    ...post,
-                    likes: isLiked ? post.likes - 1 : post.likes + 1,
-                    isLiked: !isLiked
-                };
+    const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Sorry, we need camera roll permissions to make this work!');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
+        });
+
+        if (!result.canceled) {
+            setNewImage(result.assets[0].uri);
+        }
+    };
+
+    const handleLike = async (id: string) => {
+        try {
+            if (!currentUser) {
+                router.push('/profile');
+                return;
             }
-            return post;
-        }));
+
+            await toggleFoodReviewLike(id, currentUser.uid);
+
+            setReviews(prev => prev.map(post => {
+                if (post.id === id) {
+                    return {
+                        ...post,
+                        likes: post.isLiked ? post.likes - 1 : post.likes + 1,
+                        isLiked: !post.isLiked
+                    };
+                }
+                return post;
+            }));
+        } catch (error) {
+            console.error('Error togging like in feed:', error);
+        }
     };
 
     const handleDelete = (id: string) => {
@@ -374,43 +368,40 @@ export default function FoodScreen() {
         setReplyingToId(null);
     };
 
-    const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 0.8,
-        });
 
-        if (!result.canceled) {
-            setNewImage(result.assets[0].uri);
+    const submitNewReview = async () => {
+        if (!newContent.trim() || !currentUser) return;
+
+        try {
+            setLoading(true);
+            let uploadedImages: string[] = [];
+            if (newImage) {
+                const imageUrl = await uploadFoodImage(newImage);
+                uploadedImages.push(imageUrl);
+            }
+
+            const outlet = DINING_OUTLETS.find(o => o.title === newLocation);
+            await addFoodReview({
+                outletId: outlet?.id || 'o1',
+                authorId: currentUser.uid,
+                authorName: currentUser.displayName || 'Anonymous',
+                authorAvatar: currentUser.photoURL || undefined,
+                rating: newRating,
+                content: newContent,
+                images: uploadedImages
+            });
+
+            await loadReviews();
+            setIsAddModalVisible(false);
+            setNewContent('');
+            setNewRating(5);
+            setNewImage(null);
+        } catch (error: any) {
+            console.error('Error submitting global review:', error);
+            alert(`Failed to post review: ${error.message}`);
+        } finally {
+            setLoading(false);
         }
-    };
-
-    const submitNewReview = () => {
-        if (!newContent.trim()) return;
-
-        const outlet = DINING_OUTLETS.find(o => o.title === newLocation);
-        const newPost = {
-            id: `p${Date.now()}`,
-            title: '',
-            outletId: outlet?.id || 'o1',
-            location: newLocation,
-            image: newImage || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
-            author: 'Me',
-            rating: newRating,
-            likes: 0,
-            time: 'Just now',
-            content: newContent,
-            isLiked: false,
-            replies: []
-        };
-
-        setReviews([newPost, ...reviews]);
-        setIsAddModalVisible(false);
-        setNewContent('');
-        setNewRating(5);
-        setNewImage(null);
     };
 
     const handleOpenLink = async (url: string) => {
@@ -428,11 +419,11 @@ export default function FoodScreen() {
             >
                 <View style={styles.cardHeader}>
                     <View style={styles.authorAvatar}>
-                        <Text style={styles.avatarText}>{String(item.author).charAt(0)}</Text>
+                        <Text style={styles.avatarText}>{String(item.authorName).charAt(0)}</Text>
                     </View>
                     <View style={styles.authorMeta}>
-                        <Text style={styles.authorName}>{String(item.author)}</Text>
-                        <Text style={styles.postTime}>{String(item.time)}</Text>
+                        <Text style={styles.authorName}>{String(item.authorName)}</Text>
+                        <Text style={styles.postTime}>{new Date(item.createdAt).toLocaleDateString()}</Text>
                     </View>
                     <View style={styles.statsRow}>
                         <Star size={12} color="#F59E0B" fill="#F59E0B" />
@@ -450,7 +441,9 @@ export default function FoodScreen() {
                     <View style={styles.footerInfo}>
                         <View style={styles.locationTag}>
                             <MapPin size={12} color="#F59E0B" />
-                            <Text style={styles.locationTagText}>{String(item.location)}</Text>
+                            <Text style={styles.locationTagText}>
+                                {DINING_OUTLETS.find(o => o.id === item.outletId)?.title || 'Restaurant'}
+                            </Text>
                         </View>
                     </View>
 

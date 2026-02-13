@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, MessageCircle, Trash2, X } from 'lucide-react-native';
+import { Heart, MapPin, MessageCircle, Trash2, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Dimensions, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Post } from '../../types';
@@ -15,7 +15,7 @@ interface PostCardProps {
     currentUserId?: string;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment, onPress, onDelete, currentUserId }) => {
+export const PostCard: React.FC<PostCardProps> = React.memo(({ post, onLike, onComment, onPress, onDelete, currentUserId }) => {
     const [zoomImage, setZoomImage] = useState<string | null>(null);
     const timeAgo = formatDistanceToNow(post.createdAt, { addSuffix: true });
 
@@ -91,6 +91,14 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment, onP
             {/* Content */}
             <Text style={styles.content}>{post.content}</Text>
 
+            {/* Location Tag */}
+            {post.locationTag && (
+                <View style={styles.locationContainer}>
+                    <MapPin size={12} color="#1E3A8A" />
+                    <Text style={styles.locationTag}>{post.locationTag}</Text>
+                </View>
+            )}
+
             {/* Images */}
             {renderImages()}
 
@@ -139,7 +147,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onLike, onComment, onP
             </Modal>
         </TouchableOpacity>
     );
-};
+});
 
 const styles = StyleSheet.create({
     container: {
@@ -261,5 +269,21 @@ const styles = StyleSheet.create({
         marginLeft: 6,
         fontSize: 14,
         color: '#6B7280',
+    },
+    locationContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+        backgroundColor: '#F0F7FF',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+        gap: 4,
+    },
+    locationTag: {
+        fontSize: 11,
+        color: '#1E3A8A',
+        fontWeight: '600',
     },
 });

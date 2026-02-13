@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import { Image as ImageIcon, X } from 'lucide-react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Image as ImageIcon, MapPin, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
@@ -18,11 +18,19 @@ import { Toast, ToastType } from '../../components/campus/Toast';
 import { getCurrentUser } from '../../services/auth';
 import { createPost, uploadPostImage } from '../../services/campus';
 import { PostCategory } from '../../types';
+import { getNearestBuilding } from '../../utils/location';
 
 const CATEGORIES: PostCategory[] = ['Events', 'Reviews', 'Guides', 'Lost & Found'];
 
 export default function ComposeScreen() {
     const router = useRouter();
+    const params = useLocalSearchParams();
+    const { lat, lng, fromMap } = params;
+
+    const buildingName = (fromMap === 'true' && lat && lng)
+        ? getNearestBuilding(parseFloat(lat as string), parseFloat(lng as string))
+        : null;
+
     const [content, setContent] = useState('');
     const [category, setCategory] = useState<PostCategory>('Events');
     const [images, setImages] = useState<string[]>([]);
@@ -91,6 +99,11 @@ export default function ComposeScreen() {
                 category,
                 images: uploadedUrls,
                 isAnonymous,
+                location: fromMap === 'true' && lat && lng ? {
+                    lat: parseFloat(lat as string),
+                    lng: parseFloat(lng as string),
+                    name: buildingName || 'Pin Location'
+                } : undefined
             });
 
             showToast('Post published successfully!');
@@ -129,6 +142,15 @@ export default function ComposeScreen() {
                     )}
                 </TouchableOpacity>
             </View>
+
+            {fromMap === 'true' && lat && lng && (
+                <View style={styles.locationBadge}>
+                    <MapPin size={14} color="#1E3A8A" />
+                    <Text style={styles.locationBadgeText}>
+                        {buildingName ? `At ${buildingName}` : 'Location Attached'}
+                    </Text>
+                </View>
+            )}
 
             <ScrollView contentContainerStyle={styles.form}>
                 {/* Category Selection */}
@@ -376,5 +398,22 @@ const styles = StyleSheet.create({
         height: 10,
         borderRadius: 5,
         backgroundColor: '#1E3A8A',
+    },
+    locationBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#EFF6FF',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        marginHorizontal: 20,
+        marginTop: 10,
+        borderRadius: 12,
+        gap: 6,
+        alignSelf: 'flex-start',
+    },
+    locationBadgeText: {
+        fontSize: 12,
+        color: '#1E3A8A',
+        fontWeight: '500',
     },
 });

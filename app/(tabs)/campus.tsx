@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Building, Plus } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ActionModal } from '../../components/campus/ActionModal';
 import { PostCard } from '../../components/campus/PostCard';
@@ -57,15 +57,15 @@ export default function CampusScreen() {
         setRefreshing(false);
     };
 
-    const handlePostPress = (postId: string) => {
+    const handlePostPress = useCallback((postId: string) => {
         router.push(`/campus/${postId}`);
-    };
+    }, [router]);
 
-    const handleCompose = () => {
+    const handleCompose = useCallback(() => {
         router.push('/campus/compose');
-    };
+    }, [router]);
 
-    const handleLike = async (postId: string) => {
+    const handleLike = useCallback(async (postId: string) => {
         try {
             if (!currentUser) return;
 
@@ -81,12 +81,12 @@ export default function CampusScreen() {
         } catch (error) {
             console.error('Error liking post:', error);
         }
-    };
+    }, [currentUser]);
 
-    const handleDeletePost = (postId: string) => {
+    const handleDeletePost = useCallback((postId: string) => {
         setSelectedPostId(postId);
         setDeleteModalVisible(true);
-    };
+    }, []);
 
     const confirmDelete = async () => {
         if (!selectedPostId) return;
@@ -151,6 +151,10 @@ export default function CampusScreen() {
                 data={posts}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.feedList}
+                initialNumToRender={5}
+                maxToRenderPerBatch={10}
+                windowSize={10}
+                removeClippedSubviews={true}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}

@@ -46,6 +46,11 @@ export interface Post {
     imageUrl?: string;
     images?: string[];
     locationTag?: string;
+    location?: {
+        lat: number;
+        lng: number;
+        name?: string;
+    };
     geoPoint?: GeoPoint;
     createdAt: Date;
     timestamp?: Date;

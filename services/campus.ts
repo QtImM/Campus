@@ -51,6 +51,11 @@ const mapSupabaseToPost = (row: any): Post => {
         comments: row.comments_count || 0,
         isAnonymous: row.is_anonymous || false,
         createdAt: new Date(row.created_at),
+        location: row.lat && row.lng ? {
+            lat: row.lat,
+            lng: row.lng,
+            name: row.location_tag || 'Pin Location'
+        } : undefined
     };
 };
 
@@ -140,6 +145,7 @@ export const createPost = async (postData: {
     category: PostCategory;
     images?: string[];
     isAnonymous: boolean;
+    location?: { lat: number; lng: number; name?: string };
 }) => {
     const insertData = {
         author_id: postData.authorId,
@@ -152,6 +158,9 @@ export const createPost = async (postData: {
         is_anonymous: postData.isAnonymous,
         likes: 0,
         comments_count: 0,
+        lat: postData.location?.lat,
+        lng: postData.location?.lng,
+        location_tag: postData.location?.name || null
     };
 
     console.log('Inserting post data:', insertData);
