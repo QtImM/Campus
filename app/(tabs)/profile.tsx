@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'expo-router';
-import { Bell, ChevronRight, Edit3, Eye, Globe, Heart as HeartIcon, HelpCircle, LogOut, MessageSquare, Shield, Sparkles, X } from 'lucide-react-native';
+import { Bell, Bot, ChevronRight, Edit3, Eye, Globe, Heart as HeartIcon, HelpCircle, LogOut, MessageSquare, Shield, Sparkles, X } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, FlatList, Modal, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
@@ -152,6 +152,27 @@ export default function ProfileScreen() {
                 </View>
                 <TouchableOpacity style={styles.editButton}>
                     <Edit3 size={20} color="#1E3A8A" />
+                </TouchableOpacity>
+            </View>
+
+            {/* Innovation Lab / Agent Entry */}
+            <View style={styles.innovationSection}>
+                <View style={styles.innovationHeader}>
+                    <Sparkles size={24} color="#1E3A8A" />
+                    <Text style={styles.innovationTitle}>创新实验室 (Experimental)</Text>
+                </View>
+                <TouchableOpacity
+                    style={styles.agentButton}
+                    onPress={() => router.push('/agent/chat')}
+                >
+                    <View style={styles.agentButtonContent}>
+                        <Bot size={24} color="#fff" />
+                        <View style={styles.agentButtonText}>
+                            <Text style={styles.agentButtonTitle}>校园生活 Agent</Text>
+                            <Text style={styles.agentButtonDesc}>智能办公助手：查位子、点外卖、懂你心</Text>
+                        </View>
+                    </View>
+                    <ChevronRight size={20} color="#fff" />
                 </TouchableOpacity>
             </View>
 
@@ -784,5 +805,56 @@ const styles = StyleSheet.create({
     },
     langBtnTextActive: {
         color: '#fff',
+    },
+    innovationSection: {
+        marginHorizontal: 16,
+        marginTop: 16,
+        padding: 16,
+        backgroundColor: '#F0F9FF',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#BAE6FD',
+    },
+    innovationHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    innovationTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#1E3A8A',
+        marginLeft: 8,
+    },
+    agentButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#1E3A8A',
+        padding: 16,
+        borderRadius: 16,
+        shadowColor: '#1E3A8A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    agentButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    agentButtonText: {
+        marginLeft: 12,
+    },
+    agentButtonTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    agentButtonDesc: {
+        fontSize: 11,
+        color: '#DBEAFE',
+        marginTop: 2,
     },
 });
