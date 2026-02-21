@@ -6,6 +6,7 @@ import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } fr
 import { ActionModal } from '../../components/campus/ActionModal';
 import { PostCard } from '../../components/campus/PostCard';
 import { Toast, ToastType } from '../../components/campus/Toast';
+import ScheduleScanner from '../../components/ScheduleScanner';
 import { getCurrentUser } from '../../services/auth';
 import { deletePost, fetchPosts, subscribeToPosts, togglePostLike } from '../../services/campus';
 import { Post, PostCategory } from '../../types';
@@ -127,6 +128,11 @@ export default function CampusScreen() {
                         </TouchableOpacity>
                     </View>
                 </View>
+            </View>
+
+            {/* AI OCR Section */}
+            <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+                <ScheduleScanner />
             </View>
 
             {/* Filter Tabs */}
