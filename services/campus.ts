@@ -1,4 +1,5 @@
 import { Post, PostCategory, PostType } from '../types';
+import { getBlockedUserIds } from './moderation';
 import { supabase } from './supabase';
 
 const POSTS_TABLE = 'posts';
@@ -36,12 +37,14 @@ const mapSupabaseToPost = (row: any): Post => {
         }
     }
 
+    const author = row.author; // Joined data from 'users' table
+
     return {
         id: row.id,
         authorId: row.author_id,
-        authorName: row.author_name,
-        authorMajor: row.author_major,
-        authorAvatar: row.author_avatar,
+        authorName: (row.is_anonymous || !author) ? row.author_name : (author.display_name || author.displayName),
+        authorMajor: (row.is_anonymous || !author) ? row.author_major : author.major,
+        authorAvatar: (row.is_anonymous || !author) ? row.author_avatar : author.avatar_url,
         content: row.content,
         category: TYPE_TO_CATEGORY[row.type] || 'All',
         type: row.type as PostType,
@@ -63,7 +66,7 @@ const mapSupabaseToPost = (row: any): Post => {
  * Fetch posts by category
  */
 export const fetchPosts = async (category: PostCategory = 'All', currentUserId?: string): Promise<Post[]> => {
-    let query = supabase.from(POSTS_TABLE).select('*');
+    let query = supabase.from(POSTS_TABLE).select('*, author:users!author_id(*)');
 
     const type = CATEGORY_TO_TYPE[category];
     if (type !== 'all') {
@@ -77,7 +80,16 @@ export const fetchPosts = async (category: PostCategory = 'All', currentUserId?:
         throw error;
     }
 
-    const posts = (data || []).map(mapSupabaseToPost);
+    let posts = (data || []).map(mapSupabaseToPost);
+
+    // Filter out posts from blocked users
+    if (currentUserId) {
+        const blockedIds = await getBlockedUserIds(currentUserId);
+        if (blockedIds.length > 0) {
+            const blockedSet = new Set(blockedIds);
+            posts = posts.filter(p => !blockedSet.has(p.authorId));
+        }
+    }
 
     // If userId is provided, check which posts the user has liked
     if (currentUserId && posts.length > 0) {
@@ -105,7 +117,7 @@ export const fetchPosts = async (category: PostCategory = 'All', currentUserId?:
 export const fetchPostById = async (postId: string, currentUserId?: string): Promise<Post | null> => {
     const { data, error } = await supabase
         .from(POSTS_TABLE)
-        .select('*')
+        .select('*, author:users!author_id(*)')
         .eq('id', postId)
         .single();
 
@@ -283,7 +295,7 @@ export const togglePostLike = async (postId: string, userId: string) => {
 export const fetchPostComments = async (postId: string) => {
     const { data, error } = await supabase
         .from(COMMENTS_TABLE)
-        .select('*')
+        .select('*, author:users!author_id(*)')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 

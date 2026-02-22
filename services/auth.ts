@@ -193,7 +193,12 @@ export const getUserProfile = async (uid: string): Promise<User | null> => {
         .eq('id', uid)
         .single();
 
-    if (error || !data) return null;
+    if (error) {
+        if (error.code === 'PGRST116') return null; // PostgREST error for "no rows returned"
+        console.error('Error fetching profile:', error);
+        throw error; // Rethrow actual errors (network, permissions, etc.)
+    }
+    if (!data) return null;
 
     // Map back to User type (snake_case -> camelCase)
     return {
@@ -219,11 +224,13 @@ export const onAuthChange = (callback: (user: any | null) => void) => {
 export const getCurrentUser = async () => {
     const isDemo = await isDemoMode();
     if (isDemo) {
+        const demoAvatar = 'https://ui-avatars.com/api/?name=Demo+Student&background=random';
         return {
             uid: APP_CONFIG.demoCredentials.uid,
             displayName: 'Demo Student',
             major: 'HKBU Student',
-            photoURL: 'https://ui-avatars.com/api/?name=Demo+Student&background=random',
+            avatarUrl: demoAvatar,
+            photoURL: demoAvatar, // Backwards compatibility
             isAnonymous: false,
             isDemo: true
         };
@@ -234,13 +241,15 @@ export const getCurrentUser = async () => {
     if (session?.user) {
         const user = session.user;
         const profile = await getUserProfile(user.id);
+        const avatar = profile?.avatarUrl || user.user_metadata?.avatar_url;
 
         return {
             ...user,
             uid: user.id,
             displayName: profile?.displayName || user.user_metadata?.display_name || 'Anonymous',
             major: profile?.major || 'Student',
-            avatarUrl: profile?.avatarUrl || user.user_metadata?.avatar_url,
+            avatarUrl: avatar,
+            photoURL: avatar, // Backwards compatibility
             socialTags: profile?.socialTags || []
         };
     }

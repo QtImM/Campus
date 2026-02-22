@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
+    Image,
     Modal,
     Platform,
     ScrollView,
@@ -225,11 +226,17 @@ export default function TeacherDetailScreen() {
                                     <View style={styles.reviewHeader}>
                                         <View style={styles.reviewerInfo}>
                                             <View style={styles.reviewerAvatar}>
-                                                <Text style={styles.reviewerInitial}>S</Text>
+                                                {review.authorAvatar && review.authorAvatar.length > 2 ? (
+                                                    <Image source={{ uri: review.authorAvatar }} style={styles.avatarImage} />
+                                                ) : (
+                                                    <Text style={styles.reviewerInitial}>
+                                                        {review.authorName ? review.authorName.charAt(0).toUpperCase() : 'S'}
+                                                    </Text>
+                                                )}
                                             </View>
                                             <View>
                                                 <Text style={styles.reviewerName}>
-                                                    {t('teachers.anonymous_student')}
+                                                    {review.authorName || t('teachers.anonymous_student')}
                                                 </Text>
                                                 <Text style={styles.reviewDate}>
                                                     {new Date(review.createdAt).toLocaleDateString()}
@@ -567,6 +574,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 10,
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
     },
     reviewerInitial: {
         fontSize: 14,

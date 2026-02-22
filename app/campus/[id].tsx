@@ -4,6 +4,7 @@ import { ChevronLeft, MessageCircle, Send, Trash2 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
+    Image,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -93,7 +94,7 @@ export default function PostDetailScreen() {
                 postId: post.id,
                 authorId: currentUser.uid,
                 authorName: currentUser.displayName || 'Anonymous',
-                authorAvatar: currentUser.photoURL || undefined,
+                authorAvatar: currentUser.avatarUrl || undefined,
                 content: commentText.trim(),
             });
 
@@ -200,9 +201,13 @@ export default function PostDetailScreen() {
                             {comments.map(comment => (
                                 <View key={comment.id} style={styles.replyItem}>
                                     <View style={styles.replyAvatar}>
-                                        <Text style={styles.replyAvatarText}>
-                                            {comment.author_name ? comment.author_name.charAt(0) : '?'}
-                                        </Text>
+                                        {comment.author_avatar ? (
+                                            <Image source={{ uri: comment.author_avatar }} style={styles.avatarImage} />
+                                        ) : (
+                                            <Text style={styles.replyAvatarText}>
+                                                {comment.author_name ? comment.author_name.charAt(0) : '?'}
+                                            </Text>
+                                        )}
                                     </View>
                                     <View style={styles.replyInfo}>
                                         <View style={styles.commentHeaderRow}>
@@ -341,6 +346,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
     },
     replyAvatarText: {
         fontSize: 14,

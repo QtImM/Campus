@@ -100,7 +100,7 @@ export default function ComposeScreen() {
                 authorId: user.uid,
                 authorName: user.displayName || 'Anonymous',
                 authorMajor: (user as any).major || 'Student',
-                authorAvatar: user.photoURL || undefined,
+                authorAvatar: user.avatarUrl || undefined,
                 content: content.trim(),
                 category,
                 images: uploadedUrls,
@@ -112,13 +112,13 @@ export default function ComposeScreen() {
                 } : undefined
             });
 
-            showToast(t('campus.modals.delete_success')); // Mapping to success msg
+            showToast(t('campus.modals.post_success')); // Corrected key
             setTimeout(() => {
                 router.back();
             }, 1500);
         } catch (error: any) {
             console.error('Submit error:', error);
-            showToast(error.message || t('campus.modals.delete_error'), 'error');
+            showToast(error.message || t('campus.modals.post_error'), 'error');
         } finally {
             setSubmitting(false);
         }

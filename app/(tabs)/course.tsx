@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { ArrowLeftRight, BookOpen, ChevronLeft, GraduationCap, Plus, Search, Star } from 'lucide-react-native';
+import { ArrowLeftRight, BookOpen, GraduationCap, Plus, Search, Star } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,6 +11,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { Skeleton } from '../../components/common/Skeleton';
 import { getLocalCourses } from '../../services/courses';
 import { supabase } from '../../services/supabase';
 import { Course } from '../../types';
@@ -33,11 +34,30 @@ export default function CoursesScreen() {
     const router = useRouter();
     const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
-    const [courses, setCourses] = useState<Course[]>(MOCK_COURSES);
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    const fetchCourses = async () => {
-        setRefreshing(true);
+    const CourseSkeleton = () => (
+        <View style={styles.skeletonCard}>
+            <View style={{ flex: 1 }}>
+                <Skeleton width="70%" height={18} style={{ marginBottom: 8 }} />
+                <Skeleton width="40%" height={12} style={{ marginBottom: 12 }} />
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <Skeleton width={60} height={20} borderRadius={10} />
+                    <Skeleton width={60} height={20} borderRadius={10} />
+                </View>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+                <Skeleton width={40} height={40} borderRadius={8} />
+            </View>
+        </View>
+    );
+
+    const fetchCourses = async (isSilent = false) => {
+        if (!isSilent && courses.length === 0) {
+            setLoading(true);
+        }
         try {
             // 1. Fetch from Supabase (may fail if table missing)
             const { data: dbData, error: dbError } = await supabase
@@ -84,13 +104,14 @@ export default function CoursesScreen() {
             });
             setCourses(fallback);
         } finally {
+            setLoading(false);
             setRefreshing(false);
         }
     };
 
     useFocusEffect(
         useCallback(() => {
-            fetchCourses();
+            fetchCourses(true); // Silent update on focus
         }, [])
     );
 
@@ -126,7 +147,7 @@ export default function CoursesScreen() {
                 </View>
             </View>
             <Text style={styles.courseName}>{item.name}</Text>
-            <Text style={styles.instructorText}>👨‍🏫 {item.instructor}</Text>
+            {/* <Text style={styles.instructorText}>👨‍🏫 {item.instructor}</Text> */}
             <View style={styles.cardFooter}>
                 <Text style={styles.deptText}>{item.department}</Text>
                 <Text style={styles.reviewCount}>{t('teachers.reviews_count', { count: item.reviewCount })}</Text>
@@ -139,9 +160,6 @@ export default function CoursesScreen() {
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerRow}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                        <ChevronLeft size={24} color="#fff" />
-                    </TouchableOpacity>
                     <Text style={styles.headerTitle}>{t('courses.title')}</Text>
                     <View style={styles.headerRightActions}>
                         <TouchableOpacity style={styles.headerActionButton} onPress={() => router.push('/teachers' as any)}>
@@ -152,7 +170,6 @@ export default function CoursesScreen() {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <Text style={styles.headerSubtitle}>Find & Review your courses & teachers</Text>
             </View>
 
             {/* Search */}
@@ -178,7 +195,7 @@ export default function CoursesScreen() {
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
-                        onRefresh={fetchCourses}
+                        onRefresh={() => fetchCourses(true)}
                         tintColor="#1E3A8A"
                     />
                 }
@@ -223,6 +240,14 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F9FAFB',
     },
+    skeletonCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     header: {
         paddingTop: 56,
         paddingBottom: 24,
@@ -237,9 +262,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 8,
     },
-    backButton: {
-        padding: 4,
-    },
     headerRightActions: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -249,14 +271,9 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#fff',
-    },
-    headerSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.7)',
-        textAlign: 'center',
     },
     searchContainer: {
         paddingHorizontal: 20,

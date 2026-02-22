@@ -1,18 +1,21 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import { Building, Plus } from 'lucide-react-native';
-import React, { useCallback, useState } from 'react';
+import { Building, Check, X as CloseIcon, Globe, Plus } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Modal, Pressable, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ActionModal } from '../../components/campus/ActionModal';
 import { PostCard } from '../../components/campus/PostCard';
 import { Toast, ToastType } from '../../components/campus/Toast';
-import ScheduleScanner from '../../components/ScheduleScanner';
+import { EULAModal } from '../../components/common/EULAModal';
+import { Skeleton } from '../../components/common/Skeleton';
 import { getCurrentUser } from '../../services/auth';
 import { deletePost, fetchPosts, subscribeToPosts, togglePostLike } from '../../services/campus';
 import { Post, PostCategory } from '../../types';
+import { changeLanguage } from '../i18n/i18n';
 
 export default function CampusScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const router = useRouter();
 
     const CATEGORIES: { id: PostCategory; label: string }[] = [
@@ -35,10 +38,36 @@ export default function CampusScreen() {
         message: '',
         type: 'success'
     });
+    const [eulaVisible, setEulaVisible] = useState(false);
+    const [langModalVisible, setLangModalVisible] = useState(false);
 
-    const loadPosts = async () => {
+    const LANGUAGE_OPTIONS = [
+        { key: 'zh-Hans', label: '简体中文 (SC)' },
+        { key: 'zh-Hant', label: '繁體中文 (HK)' },
+        { key: 'en', label: 'English (US)' },
+    ];
+
+    const PostSkeleton = () => (
+        <View style={styles.skeletonCard}>
+            <View style={styles.header}>
+                <Skeleton width={40} height={40} borderRadius={20} style={{ marginRight: 12 }} />
+                <View style={{ flex: 1 }}>
+                    <Skeleton width="40%" height={14} style={{ marginBottom: 6 }} />
+                    <Skeleton width="20%" height={10} />
+                </View>
+            </View>
+            <Skeleton width="100%" height={16} style={{ marginBottom: 8 }} />
+            <Skeleton width="100%" height={16} style={{ marginBottom: 8 }} />
+            <Skeleton width="60%" height={16} style={{ marginBottom: 16 }} />
+            <Skeleton width="100%" height={200} borderRadius={12} />
+        </View>
+    );
+
+    const loadPosts = async (isSilent = false) => {
         try {
-            setLoading(true);
+            if (!isSilent && posts.length === 0) {
+                setLoading(true);
+            }
             const user = await getCurrentUser();
             setCurrentUser(user);
             const data = await fetchPosts(activeCategory, user?.uid);
@@ -47,25 +76,47 @@ export default function CampusScreen() {
             console.error('Error loading posts:', error);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
+        const checkEULA = async () => {
+            try {
+                const accepted = await AsyncStorage.getItem('eula_accepted');
+                if (accepted !== 'true') {
+                    setEulaVisible(true);
+                }
+            } catch (e) {
+                console.error('EULA check error:', e);
+            }
+        };
+
+        checkEULA();
         loadPosts();
 
         // Subscribe to changes
         const unsubscribe = subscribeToPosts(() => {
-            loadPosts();
+            loadPosts(true); // Silent update on real-time change
         });
 
         return () => unsubscribe();
     }, [activeCategory]);
 
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await loadPosts();
-        setRefreshing(false);
+    const handleAcceptEULA = async () => {
+        try {
+            await AsyncStorage.setItem('eula_accepted', 'true');
+            setEulaVisible(false);
+        } catch (e) {
+            console.error('EULA accept error:', e);
+            setEulaVisible(false);
+        }
     };
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        loadPosts(true);
+    }, [activeCategory, posts.length]);
 
     const handlePostPress = useCallback((postId: string) => {
         router.push(`/campus/${postId}`);
@@ -122,6 +173,12 @@ export default function CampusScreen() {
                 <View style={styles.headerRow}>
                     <Text style={styles.headerTitle}>{t('campus.title')}</Text>
                     <View style={styles.headerActions}>
+                        <TouchableOpacity
+                            style={styles.langButton}
+                            onPress={() => setLangModalVisible(true)}
+                        >
+                            <Globe size={18} color="#fff" />
+                        </TouchableOpacity>
                         <TouchableOpacity style={styles.actionButton}>
                             <Building size={18} color="#1E3A8A" />
                             <Text style={styles.actionText}>{t('campus.campus_filter')}</Text>
@@ -130,10 +187,10 @@ export default function CampusScreen() {
                 </View>
             </View>
 
-            {/* AI OCR Section */}
-            <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+            {/* AI OCR Section - Hidden for now */}
+            {/* <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
                 <ScheduleScanner />
-            </View>
+            </View> */}
 
             {/* Filter Tabs */}
             <View style={styles.filterContainer}>
@@ -188,10 +245,18 @@ export default function CampusScreen() {
                     />
                 )}
                 ListEmptyComponent={
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyText}>{t('campus.empty.no_posts')}</Text>
-                        <Text style={styles.emptySubtext}>{t('campus.empty.be_first')}</Text>
-                    </View>
+                    loading ? (
+                        <View>
+                            <PostSkeleton />
+                            <PostSkeleton />
+                            <PostSkeleton />
+                        </View>
+                    ) : (
+                        <View style={styles.emptyState}>
+                            <Text style={styles.emptyText}>{t('campus.empty.no_posts')}</Text>
+                            <Text style={styles.emptySubtext}>{t('campus.empty.be_first')}</Text>
+                        </View>
+                    )
                 }
             />
 
@@ -215,6 +280,59 @@ export default function CampusScreen() {
                 type={toast.type}
                 onHide={() => setToast(prev => ({ ...prev, visible: false }))}
             />
+
+            <EULAModal
+                visible={eulaVisible}
+                onAccept={handleAcceptEULA}
+            />
+
+            {/* Language Switcher Modal */}
+            <Modal
+                visible={langModalVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setLangModalVisible(false)}
+            >
+                <Pressable
+                    style={styles.modalOverlay}
+                    onPress={() => setLangModalVisible(false)}
+                >
+                    <View style={styles.langModalContent}>
+                        <View style={styles.langModalHeader}>
+                            <Text style={styles.langModalTitle}>{t('profile.language')}</Text>
+                            <TouchableOpacity onPress={() => setLangModalVisible(false)}>
+                                <CloseIcon size={24} color="#374151" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.langList}>
+                            {LANGUAGE_OPTIONS.map((opt) => (
+                                <TouchableOpacity
+                                    key={opt.key}
+                                    style={styles.langOption}
+                                    onPress={async () => {
+                                        await changeLanguage(opt.key);
+                                        setLangModalVisible(false);
+                                    }}
+                                >
+                                    <View style={styles.langOptionLeft}>
+                                        <Globe size={20} color={i18n.language === opt.key ? "#1E3A8A" : "#9CA3AF"} />
+                                        <Text style={[
+                                            styles.langOptionText,
+                                            i18n.language === opt.key && styles.langOptionTextActive
+                                        ]}>
+                                            {opt.label}
+                                        </Text>
+                                    </View>
+                                    {i18n.language === opt.key && (
+                                        <Check size={20} color="#1E3A8A" />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+                </Pressable>
+            </Modal>
         </View>
     );
 }
@@ -223,6 +341,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F9FAFB',
+    },
+    skeletonCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        marginHorizontal: 0,
     },
     header: {
         paddingTop: 56,
@@ -320,5 +445,62 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#1E3A8A',
         marginLeft: 4,
+    },
+    langButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 4,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    langModalContent: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 24,
+        paddingBottom: 40,
+    },
+    langModalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    langModalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#111827',
+    },
+    langList: {
+        gap: 12,
+    },
+    langOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 16,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 16,
+    },
+    langOptionLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    langOptionText: {
+        fontSize: 16,
+        color: '#4B5563',
+        fontWeight: '500',
+    },
+    langOptionTextActive: {
+        color: '#1E3A8A',
+        fontWeight: '700',
     },
 });

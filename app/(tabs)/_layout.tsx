@@ -1,6 +1,9 @@
+import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import { BookOpen, Calendar, Map, School, User } from 'lucide-react-native';
+import { Building2, Calendar as CalendarIcon, GraduationCap, Map as MapIcon, User as UserIcon } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet } from 'react-native';
+import { AnimatedTabIcon } from '../../components/common/AnimatedTabIcon';
 
 export default function TabLayout() {
   const { t } = useTranslation();
@@ -11,26 +14,40 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          elevation: 0,
-          height: 85,
-          backgroundColor: '#F3F4F6', // Solid light gray
-          borderTopWidth: 1,
-          borderTopColor: '#E5E7EB',
+          bottom: 25,
+          left: 20,
+          right: 20,
+          height: 64,
+          borderRadius: 25,
+          backgroundColor: 'rgba(255, 255, 255, 0.7)',
+          borderTopWidth: 0,
+          elevation: 10,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.1,
+          shadowRadius: 20,
         },
-        tabBarBackground: undefined, // Remove blur for a solid look
-        tabBarActiveTintColor: '#1E3A8A', // Primary
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarBackground: () => (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              borderRadius: 25,
+              overflow: 'hidden'
+            }}
+          />
+        ),
+        tabBarActiveTintColor: '#000000',
+        tabBarInactiveTintColor: '#8E8E93',
         tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: 'bold',
-          marginBottom: 10,
+          fontWeight: '600',
+          marginTop: -5,
+          marginBottom: 8,
         },
-        tabBarIconStyle: {
-          marginTop: 10,
-        },
+        tabBarShowLabel: true,
+        lazy: true,
       }}
     >
       {/* Hidden redirect tab */}
@@ -43,56 +60,51 @@ export default function TabLayout() {
       <Tabs.Screen
         name="campus"
         options={{
-          title: t('navigation.home'),
           tabBarLabel: t('navigation.home'),
-          tabBarIcon: ({ color, size }) => (
-            <Calendar color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon focused={focused} color={color} size={22} IconComponent={CalendarIcon} />
           ),
         }}
       />
       <Tabs.Screen
         name="map"
         options={{
-          title: t('navigation.map'),
           tabBarLabel: t('navigation.map'),
-          tabBarIcon: ({ color, size }) => (
-            <Map color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon focused={focused} color={color} size={22} IconComponent={MapIcon} />
           ),
         }}
       />
       <Tabs.Screen
         name="course"
         options={{
-          title: t('navigation.course'),
           tabBarLabel: t('navigation.course'),
-          tabBarIcon: ({ color, size }) => (
-            <BookOpen color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon focused={focused} color={color} size={22} IconComponent={GraduationCap} />
           ),
         }}
       />
       <Tabs.Screen
         name="classroom"
         options={{
-          title: t('navigation.classroom'),
           tabBarLabel: t('navigation.classroom'),
-          tabBarIcon: ({ color, size }) => (
-            <School color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon focused={focused} color={color} size={22} IconComponent={Building2} />
           ),
         }}
       />
       <Tabs.Screen
         name="connect"
         options={{
-          href: null, // Hide from tab bar
+          href: null,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: t('navigation.me'),
           tabBarLabel: t('navigation.me'),
-          tabBarIcon: ({ color, size }) => (
-            <User color={color} size={size} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon focused={focused} color={color} size={22} IconComponent={UserIcon} />
           ),
         }}
       />

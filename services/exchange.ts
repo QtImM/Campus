@@ -11,7 +11,7 @@ export const fetchExchanges = async (): Promise<CourseExchange[]> => {
     try {
         const { data, error } = await supabase
             .from(EXCHANGES_TABLE)
-            .select('*')
+            .select('*, author:users!user_id(*)')
             .eq('status', 'open')
             .order('created_at', { ascending: false });
 
@@ -70,7 +70,7 @@ export const fetchExchangeComments = async (exchangeId: string): Promise<Exchang
     try {
         const { data, error } = await supabase
             .from(EXCHANGE_COMMENTS_TABLE)
-            .select('*')
+            .select('*, author:users!author_id(*)')
             .eq('exchange_id', exchangeId)
             .order('created_at', { ascending: true });
 
@@ -189,34 +189,40 @@ export const toggleExchangeLike = async (exchangeId: string, userId: string) => 
 };
 
 // Helper functions
-const mapSupabaseToExchange = (data: any): CourseExchange => ({
-    id: data.id,
-    userId: data.user_id,
-    userName: data.user_name,
-    userAvatar: data.user_avatar,
-    userMajor: data.user_major,
-    haveCourse: data.have_course,
-    haveSection: data.have_section,
-    haveTeacher: data.have_teacher,
-    haveTime: data.have_time,
-    wantCourses: data.want_courses,
-    reason: data.reason,
-    contacts: data.contacts,
-    createdAt: new Date(data.created_at),
-    status: data.status,
-    commentCount: data.comment_count || 0,
-    likes: data.likes || 0,
-});
+const mapSupabaseToExchange = (data: any): CourseExchange => {
+    const author = data.author;
+    return {
+        id: data.id,
+        userId: data.user_id,
+        userName: author ? (author.display_name || author.displayName) : data.user_name,
+        userAvatar: author ? author.avatar_url : data.user_avatar,
+        userMajor: author ? author.major : data.user_major,
+        haveCourse: data.have_course,
+        haveSection: data.have_section,
+        haveTeacher: data.have_teacher,
+        haveTime: data.have_time,
+        wantCourses: data.want_courses,
+        reason: data.reason,
+        contacts: data.contacts,
+        createdAt: new Date(data.created_at),
+        status: data.status,
+        commentCount: data.comment_count || 0,
+        likes: data.likes || 0,
+    };
+};
 
-const mapSupabaseToComment = (data: any): ExchangeComment => ({
-    id: data.id,
-    exchangeId: data.exchange_id,
-    authorId: data.author_id,
-    authorName: data.author_name,
-    authorAvatar: data.author_avatar,
-    content: data.content,
-    createdAt: new Date(data.created_at),
-});
+const mapSupabaseToComment = (data: any): ExchangeComment => {
+    const author = data.author;
+    return {
+        id: data.id,
+        exchangeId: data.exchange_id,
+        authorId: data.author_id,
+        authorName: author ? (author.display_name || author.displayName) : data.author_name,
+        authorAvatar: author ? author.avatar_url : data.author_avatar,
+        content: data.content,
+        createdAt: new Date(data.created_at),
+    };
+};
 
 // incrementExchangeCommentCount removed in favor of rpc call
 

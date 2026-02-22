@@ -136,8 +136,11 @@
             "delete_title": "删除贴子",
             "delete_msg": "确定要删除这条贴子吗？此操作不可撤销。",
             "delete_confirm": "删除",
+            "delete_confirm_localized": "删除",
             "delete_success": "贴子删除成功",
-            "delete_error": "删除失败"
+            "delete_error": "删除失败",
+            "post_success": "贴子发布成功",
+            "post_error": "发布失败"
         }
     },
     "classroom_tab": {
@@ -232,5 +235,38 @@
         "error_no_auth": "身份已过期，请重新登录",
         "tags_limit": "最多选择 3 个标签",
         "default_major": "未设定专业"
+    },
+    "moderation": {
+        "options_title": "选项",
+        "report_post": "举报贴子",
+        "block_user": "屏蔽用户",
+        "report_title": "举报内容",
+        "report_desc": "你为什么要举报这个内容？",
+        "report_reasons": {
+            "spam": "垃圾广告",
+            "harassment": "骚扰",
+            "hate_speech": "仇恨言论",
+            "sexual_content": "色情内容",
+            "other": "其他"
+        },
+        "report_success_title": "已举报",
+        "report_success_msg": "感谢你帮助维护社区安全。我们将核实此内容。",
+        "block_title": "屏蔽用户",
+        "block_msg": "确定要屏蔽该用户吗？屏蔽后你将不再看到该用户的任何内容。",
+        "block_confirm": "屏蔽",
+        "block_success": "已成功屏蔽该用户。",
+        "eula": {
+            "title": "社区指南与最终用户协议",
+            "zero_tolerance": "零容忍政策",
+            "prohibited_content": "禁止内容",
+            "user_moderation": "用户自律工具",
+            "enforcement": "处罚措施",
+            "accept": "接受并继续",
+            "agreement_text": "点击“接受并继续”即表示您同意我们的服务条款并确认您已阅读我们的零容忍政策。",
+            "policy_desc": "HKCampus 是一个学生分享信息和经验的社区。为了确保所有人的安全环境，我们对不良内容和滥用用户采取“零容忍”政策。",
+            "prohibited_list": "使用本应用即表示您同意不发布以下内容：\n• 诽谤、淫秽或色情内容\n• 攻击性、仇恨或歧视性言论\n• 骚扰、威胁或对他人的伤害\n• 宣传非法活动或暴力\n• 侵犯知识产权",
+            "moderation_desc": "我们提供工具供您保护自己：\n1. **举报**：您可以举报任何违反这些条款的贴子或评论。我们的团队会在 24 小时内进行审核。\n2. **屏蔽**：您可以随时屏蔽任何用户。屏蔽后，您将不再看到该用户的任何内容。",
+            "enforcement_desc": "违反这些条款将导致违规内容被立即删除，并可能在不事先通知的情况下永久封禁用户账号。"
+        }
     }
 }

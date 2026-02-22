@@ -137,7 +137,9 @@
             "delete_msg": "確定要刪除這條貼文嗎？此操作不可撤銷。",
             "delete_confirm": "刪除",
             "delete_success": "貼文刪除成功",
-            "delete_error": "刪除失敗"
+            "delete_error": "刪除失敗",
+            "post_success": "貼文發布成功",
+            "post_error": "發布失敗"
         }
     },
     "classroom_tab": {
@@ -233,5 +235,38 @@
         "tags_limit": "最多選擇 3 個標籤",
         "default_major": "未設定專業",
         "error_no_auth": "找不到登錄信息，請重新登錄"
+    },
+    "moderation": {
+        "options_title": "選項",
+        "report_post": "檢舉貼文",
+        "block_user": "封鎖用戶",
+        "report_title": "檢舉內容",
+        "report_desc": "你為什麼要檢舉這個內容？",
+        "report_reasons": {
+            "spam": "垃圾廣告",
+            "harassment": "騷擾",
+            "hate_speech": "仇恨言論",
+            "sexual_content": "色情內容",
+            "other": "其他"
+        },
+        "report_success_title": "已檢舉",
+        "report_success_msg": "感謝你幫助維護社區安全。我們將核實此內容。",
+        "block_title": "封鎖用戶",
+        "block_msg": "確定要封鎖該用戶嗎？封鎖後你將不再看到該用戶的任何內容。",
+        "block_confirm": "封鎖",
+        "block_success": "已成功封鎖該用戶。",
+        "eula": {
+            "title": "社區指南與最終用戶協議",
+            "zero_tolerance": "零容忍政策",
+            "prohibited_content": "禁止內容",
+            "user_moderation": "用戶自律工具",
+            "enforcement": "處罰措施",
+            "accept": "接受並繼續",
+            "agreement_text": "點擊“接受並繼續”即表示您同意我們的服務條款並確認您已閱讀我們的零容忍政策。",
+            "policy_desc": "HKCampus 是一個學生分享資訊和經驗的社區。為了確保所有人的安全環境，我們對不良內容和濫用用戶採取“零容忍”政策。",
+            "prohibited_list": "使用本應用即表示您同意不發佈以下內容：\n• 誹謗、淫穢或色情內容\n• 攻擊性、仇恨或歧視性言論\n• 騷擾、威脅或對他人的傷害\n• 宣傳非法活動或暴力\n• 侵犯知識產權",
+            "moderation_desc": "我們提供工具供您保護自己：\n1. **檢舉**：您可以檢舉任何違反這些條款的貼文或評論。我們的團隊會在 24 小時內進行審核。\n2. **封鎖**：您可以隨時封鎖任何用戶。封鎖後，您將不再看到該用戶的任何內容。",
+            "enforcement_desc": "違反這些條款將導致違规內容被立即刪除，並可能在不事先通知的情況下永久封鎖用戶賬號。"
+        }
     }
 }

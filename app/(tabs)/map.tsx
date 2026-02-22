@@ -794,14 +794,17 @@ export default function MapScreen() {
         currentPosts,
         currentFoodSpots,
         currentBuildings,
-        showFoodMap,
-        showBuildingMap,
         editMode,
         navTarget,
         isNavigating,
         currentUserId,
         t
     ]);
+
+    // Memoize the source object to prevent WebView reloads on unrelated state updates
+    const mapSource = useMemo(() => ({
+        html: mapHtml
+    }), [mapHtml]);
 
     const handleLocationPress = async (autoCenter = true) => {
         setLocating(true);
@@ -994,9 +997,7 @@ export default function MapScreen() {
                 ref={webViewRef}
                 key={isNavigating ? 'nav_mode' : 'normal_mode'} // Only reload when entering/exiting nav
                 originWhitelist={['*']}
-                source={{
-                    html: mapHtml
-                }}
+                source={mapSource}
                 style={styles.map}
                 onMessage={handleWebViewMessage}
                 javaScriptEnabled={true}
