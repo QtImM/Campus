@@ -212,6 +212,7 @@ export default function CoursesScreen() {
 
             {/* Teacher Review FAB */}
             <TouchableOpacity
+                testID="rate-fab"
                 style={styles.teacherFab}
                 onPress={() => router.push('/teachers' as any)}
             >

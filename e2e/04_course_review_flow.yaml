@@ -1,0 +1,15 @@
+appId: host.exp.exponent
+---
+- tapOn: "点评"
+- assertVisible: "课程点评"
+- tapOn:
+          id: "rate-fab"
+- assertVisible: "教师列表"
+- tapOn:
+          point: 50%, 30%
+- assertVisible: "Student Reviews"
+- tapOn: "点评"
+- assertVisible: "提交评价"
+- tapOn: "分享您的修课体验..."
+- inputText: "Great teacher, highly recommended!"
+- tapOn: "提交"

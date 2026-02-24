@@ -63,5 +63,16 @@ export const TOOLS: ToolDefinition[] = [
             },
             required: ['key', 'value']
         }
+    },
+    {
+        name: 'search_campus_faq',
+        description: 'Search the official HKBU knowledge base for questions about admissions, library policies, IT services, housing, and financial aid.',
+        parameters: {
+            type: 'object',
+            properties: {
+                query: { type: 'string', description: 'The user search query in English or Chinese' }
+            },
+            required: ['query']
+        }
     }
 ];

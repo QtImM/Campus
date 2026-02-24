@@ -261,7 +261,7 @@ export default function CampusScreen() {
             />
 
             {/* FAB */}
-            <TouchableOpacity style={styles.fab} onPress={handleCompose}>
+            <TouchableOpacity testID="new-post-fab" style={styles.fab} onPress={handleCompose}>
                 <Plus size={28} color="#fff" />
             </TouchableOpacity>
 

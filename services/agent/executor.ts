@@ -1,3 +1,4 @@
+import { FAQService } from '../faq';
 import { LIBRARY_SCRIPTS } from './automation/library';
 import { agentBridge } from './bridge';
 import { callDeepSeek } from './llm';
@@ -80,6 +81,13 @@ export class AgentExecutor {
                 }
             case 'book_library_seat':
                 return "Seat reservation initiated. Please confirm the time on the screen.";
+            case 'search_campus_faq':
+                const faqResults = FAQService.searchFAQs(input.query);
+                if (faqResults.length === 0) {
+                    return "I couldn't find a specific answer in the official FAQ for that query. You might want to check the university website directly.";
+                }
+                const formatted = faqResults.map(f => `Q: ${f.question_zh}\nA: ${f.answer_zh}`).join('\n\n');
+                return `Here is what I found in the campus knowledge base:\n\n${formatted}`;
             default:
                 return `Error: Tool ${toolName} not found.`;
         }

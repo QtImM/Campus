@@ -1,0 +1,13 @@
+appId: host.exp.exponent
+---
+- tapOn: "地图"
+- assertVisible: "全部"
+- tapOn: "教室"
+- assertVisible: "校园建筑"
+- tapOn: "搜索建筑 (如 AAB, OEW...)"
+- inputText: "Library"
+- pressKey: Enter
+- tapOn: "Main Library"
+- assertVisible: "Start Navigation"
+- tapOn: "Start Navigation"
+- assertVisible: "全部"

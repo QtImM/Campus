@@ -1,0 +1,12 @@
+appId: host.exp.exponent
+---
+- tapOn: "我的"
+- tapOn: "退出登录"
+- tapOn: "确定"
+- assertVisible: "登录"
+- tapOn: "电子邮箱 / 学号"
+- inputText: "demo@hkcampus.edu.hk"
+- tapOn: "密码"
+- inputText: "demo1234"
+- tapOn: "登录"
+- assertVisible: "我的"
