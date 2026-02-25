@@ -1,3 +1,5 @@
+import * as FileSystem from 'expo-file-system/legacy';
+import { decode } from 'base64-arraybuffer';
 import { CourseTeaming, TeamingComment } from '../types';
 import { supabase } from './supabase';
 
@@ -22,14 +24,21 @@ const isLocalFilePath = (uri: string): boolean => {
  */
 const uploadTeamingAvatar = async (uri: string, prefix: string): Promise<string> => {
     try {
-        const response = await fetch(uri);
-        const blob = await response.blob();
         const fileName = `${prefix}/${Date.now()}.jpg`;
+
+        // Read the file as base64 using expo-file-system (reliable in React Native)
+        const base64Data = await FileSystem.readAsStringAsync(uri, {
+            encoding: 'base64',
+        });
+
+        // Decode base64 to ArrayBuffer for Supabase
+        const arrayBuffer = decode(base64Data);
 
         const { data, error } = await supabase.storage
             .from(TEAMING_STORAGE_BUCKET)
-            .upload(fileName, blob, {
+            .upload(fileName, arrayBuffer, {
                 contentType: 'image/jpeg',
+                upsert: true,
             });
 
         if (error) {

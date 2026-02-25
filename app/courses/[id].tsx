@@ -211,8 +211,8 @@ export default function CourseDetailScreen() {
                 content: newMessage.trim(),
                 created_at: new Date().toISOString(),
                 users: {
-                    display_name: user.display_name || 'Me',
-                    avatar_url: user.avatar_url || '👤'
+                    display_name: user.displayName || 'Me',
+                    avatar_url: user.avatarUrl || '👤'
                 }
             };
             setMessages(prev => [...prev, optimisticMsg]);
@@ -247,8 +247,8 @@ export default function CourseDetailScreen() {
         const reviewData: Partial<Review> = {
             courseId: id as string,
             authorId: user.uid,
-            authorName: user.display_name || 'Anonymous',
-            authorAvatar: user.avatar_url || '👤',
+            authorName: user.displayName || 'Anonymous',
+            authorAvatar: user.avatarUrl || '👤',
             rating: rating > 0 ? rating : undefined,
             difficulty: difficulty > 0 ? difficulty : 3,
             content: reviewContent.trim(),
@@ -266,8 +266,8 @@ export default function CourseDetailScreen() {
                 id: `temp_${Date.now()}`,
                 courseId: id as string,
                 authorId: user.uid,
-                authorName: user.display_name || 'Me',
-                authorAvatar: user.avatar_url || '👤',
+                authorName: user.displayName || 'Me',
+                authorAvatar: user.avatarUrl || '👤',
                 rating: rating > 0 ? rating : undefined,
                 difficulty: difficulty > 0 ? difficulty : 3,
                 content: reviewContent.trim(),
@@ -342,8 +342,8 @@ export default function CourseDetailScreen() {
             const { success, data, error } = await postTeamingRequest({
                 courseId: id as string,
                 userId: user.uid,
-                userName: user.display_name || 'Anonymous',
-                userAvatar: user.avatar_url || '👤',
+                userName: user.displayName || 'Anonymous',
+                userAvatar: user.avatarUrl || '👤',
                 userMajor: user.major || 'Student',
                 section: teamingSection,
                 selfIntro: teamingSelfIntro,
