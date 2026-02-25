@@ -11,7 +11,7 @@ export const fetchExchanges = async (): Promise<CourseExchange[]> => {
     try {
         const { data, error } = await supabase
             .from(EXCHANGES_TABLE)
-            .select('*')
+            .select('*, author:users!user_id(*)')
             .eq('status', 'open')
             .order('created_at', { ascending: false });
 
@@ -39,7 +39,7 @@ export const postExchange = async (exchange: Omit<CourseExchange, 'id' | 'create
             user_major: exchange.userMajor,
             have_course: exchange.haveCourse,
             have_section: exchange.haveSection,
-            have_instructor: exchange.haveInstructor,
+            have_teacher: exchange.haveTeacher,
             have_time: exchange.haveTime,
             want_courses: exchange.wantCourses,
             reason: exchange.reason,
@@ -70,7 +70,7 @@ export const fetchExchangeComments = async (exchangeId: string): Promise<Exchang
     try {
         const { data, error } = await supabase
             .from(EXCHANGE_COMMENTS_TABLE)
-            .select('*')
+            .select('*, author:users!author_id(*)')
             .eq('exchange_id', exchangeId)
             .order('created_at', { ascending: true });
 
@@ -105,8 +105,26 @@ export const postExchangeComment = async (exchangeId: string, author: { id: stri
 
         if (error) throw error;
 
-        // Increment comment count
-        await incrementExchangeCommentCount(exchangeId);
+        // Use RPC to increment comment count (more reliable)
+        await supabase.rpc('increment_exchange_comment_count', { row_id: exchangeId });
+
+        // Create a notification for the exchange owner
+        const { data: exchange } = await supabase
+            .from(EXCHANGES_TABLE)
+            .select('user_id, have_course')
+            .eq('id', exchangeId)
+            .single();
+
+        if (exchange && exchange.user_id !== author.id) {
+            const { createNotification } = await import('./notifications');
+            await createNotification({
+                user_id: exchange.user_id,
+                type: 'comment',
+                title: 'New Comment',
+                content: `${author.name} commented on your ${exchange.have_course} exchange.`,
+                related_id: exchangeId,
+            });
+        }
 
         return mapSupabaseToComment(data);
     } catch (e) {
@@ -144,6 +162,25 @@ export const toggleExchangeLike = async (exchangeId: string, userId: string) => 
             .eq('id', exchangeId);
 
         if (updateError) return { success: false };
+
+        // Create a notification for the owner
+        const { data: exchangeData } = await supabase
+            .from(EXCHANGES_TABLE)
+            .select('user_id, have_course')
+            .eq('id', exchangeId)
+            .single();
+
+        if (exchangeData && exchangeData.user_id !== userId) {
+            const { createNotification } = await import('./notifications');
+            await createNotification({
+                user_id: exchangeData.user_id,
+                type: 'like',
+                title: 'New Like',
+                content: `Someone liked your ${exchangeData.have_course} exchange request!`,
+                related_id: exchangeId,
+            });
+        }
+
         return { success: true };
     } catch (e) {
         console.error('Error toggling like:', e);
@@ -152,53 +189,42 @@ export const toggleExchangeLike = async (exchangeId: string, userId: string) => 
 };
 
 // Helper functions
-const mapSupabaseToExchange = (data: any): CourseExchange => ({
-    id: data.id,
-    userId: data.user_id,
-    userName: data.user_name,
-    userAvatar: data.user_avatar,
-    userMajor: data.user_major,
-    haveCourse: data.have_course,
-    haveSection: data.have_section,
-    haveInstructor: data.have_instructor,
-    haveTime: data.have_time,
-    wantCourses: data.want_courses,
-    reason: data.reason,
-    contacts: data.contacts,
-    createdAt: new Date(data.created_at),
-    status: data.status,
-    commentCount: data.comment_count || 0,
-    likes: data.likes || 0,
-});
-
-const mapSupabaseToComment = (data: any): ExchangeComment => ({
-    id: data.id,
-    exchangeId: data.exchange_id,
-    authorId: data.author_id,
-    authorName: data.author_name,
-    authorAvatar: data.author_avatar,
-    content: data.content,
-    createdAt: new Date(data.created_at),
-});
-
-const incrementExchangeCommentCount = async (exchangeId: string) => {
-    try {
-        const { data: exchange } = await supabase
-            .from(EXCHANGES_TABLE)
-            .select('comment_count')
-            .eq('id', exchangeId)
-            .single();
-
-        if (exchange) {
-            await supabase
-                .from(EXCHANGES_TABLE)
-                .update({ comment_count: (exchange.comment_count || 0) + 1 })
-                .eq('id', exchangeId);
-        }
-    } catch (e) {
-        console.error('Error incrementing comment count:', e);
-    }
+const mapSupabaseToExchange = (data: any): CourseExchange => {
+    const author = data.author;
+    return {
+        id: data.id,
+        userId: data.user_id,
+        userName: author ? (author.display_name || author.displayName) : data.user_name,
+        userAvatar: author ? author.avatar_url : data.user_avatar,
+        userMajor: author ? author.major : data.user_major,
+        haveCourse: data.have_course,
+        haveSection: data.have_section,
+        haveTeacher: data.have_teacher,
+        haveTime: data.have_time,
+        wantCourses: data.want_courses,
+        reason: data.reason,
+        contacts: data.contacts,
+        createdAt: new Date(data.created_at),
+        status: data.status,
+        commentCount: data.comment_count || 0,
+        likes: data.likes || 0,
+    };
 };
+
+const mapSupabaseToComment = (data: any): ExchangeComment => {
+    const author = data.author;
+    return {
+        id: data.id,
+        exchangeId: data.exchange_id,
+        authorId: data.author_id,
+        authorName: author ? (author.display_name || author.displayName) : data.author_name,
+        authorAvatar: author ? author.avatar_url : data.author_avatar,
+        content: data.content,
+        createdAt: new Date(data.created_at),
+    };
+};
+
+// incrementExchangeCommentCount removed in favor of rpc call
 
 /**
  * Mock data for development.
@@ -211,12 +237,12 @@ const getMockExchanges = (): CourseExchange[] => [
         userAvatar: '👤',
         userMajor: 'Computer Science',
         haveCourse: 'COMP3015',
-        haveSection: 'Sec1',
-        haveInstructor: 'Dr. Smith',
+        haveSection: '1',
+        haveTeacher: 'Dr. Smith',
         haveTime: 'Mon 2:30 PM',
         wantCourses: [
-            { code: 'COMP3011', section: 'Sec2', instructor: 'Prof. Wong', time: 'Wed 10:30 AM' },
-            { code: 'COMP3016', section: 'Sec1' }
+            { code: 'COMP3011', section: '2', teacher: 'Prof. Wong', time: 'Wed 10:30 AM' },
+            { code: 'COMP3016', section: '1' }
         ],
         reason: 'Time conflict with my other core course.',
         contacts: [
@@ -236,11 +262,11 @@ const getMockExchanges = (): CourseExchange[] => [
         userAvatar: '👩‍🎓',
         userMajor: 'Marketing',
         haveCourse: 'MKTG2005',
-        haveSection: 'Sec3',
-        haveInstructor: 'Dr. Johnson',
+        haveSection: '3',
+        haveTeacher: 'Dr. Johnson',
         haveTime: 'Tue 1:00 PM',
         wantCourses: [
-            { code: 'MKTG3010', section: 'Sec1' },
+            { code: 'MKTG3010', section: '1' },
             { code: 'MKTG3020' }
         ],
         contacts: [

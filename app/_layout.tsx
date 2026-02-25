@@ -2,13 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import 'react-native-url-polyfill/auto';
+import { StartupAnimation } from '../components/common/StartupAnimation';
 import '../global.css';
-import { getUserProfile, onAuthChange } from '../services/auth';
+import { getUserProfile, isDemoMode, onAuthChange } from '../services/auth';
+import './i18n/i18n'; // Initialize i18n
 
 const DEMO_MODE_KEY = 'hkcampus_demo_mode';
 
-// Helper to check/set demo mode
+// Helper to set demo mode
 export const setDemoMode = async (enabled: boolean) => {
   if (enabled) {
     await AsyncStorage.setItem(DEMO_MODE_KEY, 'true');
@@ -17,15 +19,11 @@ export const setDemoMode = async (enabled: boolean) => {
   }
 };
 
-export const isDemoMode = async () => {
-  const value = await AsyncStorage.getItem(DEMO_MODE_KEY);
-  return value === 'true';
-};
-
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const [loading, setLoading] = useState(true);
+  const [isAnimationFinished, setIsAnimationFinished] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -43,19 +41,33 @@ export default function RootLayout() {
 
       // Normal auth check
       const unsubscribe = onAuthChange(async (user) => {
-        if (!user) {
-          if (!inAuthGroup) {
-            router.replace('/(auth)/login');
-          }
-        } else {
-          const profile = await getUserProfile(user.uid);
-          if (!profile) {
-            if (segments.length > 1 && (segments as string[])[1] !== 'setup') {
-              router.replace('/(auth)/setup');
+        try {
+          if (!user) {
+            if (!inAuthGroup) {
+              router.replace('/(auth)/login');
             }
-          } else if (inAuthGroup) {
-            router.replace('/(tabs)/campus');
+          } else {
+            const profile = await getUserProfile(user.uid);
+            const currentSegment = segments.length > 1 ? (segments as string[])[1] : '';
+
+            if (!profile) {
+              // Only redirect to setup if we're not currently in verify or forgot-password flow
+              // and we're sure the profile really doesn't exist
+              if (currentSegment !== 'setup' &&
+                currentSegment !== 'verify' &&
+                currentSegment !== 'forgot-password') {
+                router.replace('/(auth)/setup');
+              }
+            } else if (inAuthGroup) {
+              if (currentSegment !== 'setup') {
+                router.replace('/(tabs)/campus');
+              }
+            }
           }
+        } catch (err) {
+          console.error('RootLayout Auth Check Error:', err);
+          // If profile fetch fails due to network, don't yank the user to setup
+          // Just let them stay where they are or handle at component level
         }
         setLoading(false);
       });
@@ -66,18 +78,21 @@ export default function RootLayout() {
     checkAuth();
   }, [segments]);
 
-  if (loading) {
+  if (loading || !isAnimationFinished) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
-        <ActivityIndicator size="large" color="#1E3A8A" />
-        <StatusBar style="dark" />
-      </View>
+      <StartupAnimation onFinish={() => setIsAnimationFinished(true)} />
     );
   }
 
   return (
     <>
-      <Slot />
+      <Slot
+        screenOptions={{
+          animation: 'slide_from_right',
+          animationDuration: 400,
+          headerShown: false,
+        }}
+      />
       <StatusBar style="auto" />
     </>
   );

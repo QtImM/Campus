@@ -1,35 +1,63 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Building, Camera, ChevronLeft, Map, MapPin, Navigation, Share2, X } from 'lucide-react-native';
+import { Building, Camera, ChevronLeft, Navigation, Share2 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
     Dimensions,
     Image,
-    Modal,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     View
 } from 'react-native';
-import { WebView } from 'react-native-webview';
-import { ALL_ROOMS, getRoomIcon } from '../(tabs)/classroom';
+// Import from data directly
+import { CAMPUS_BUILDINGS } from '../../data/buildings';
+import { getBuildings } from '../../services/buildings';
+import { CampusLocation } from '../../types';
 
 const { width, height } = Dimensions.get('window');
 
-export default function ClassroomDetail() {
+export default function BuildingDetail() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const [photos, setPhotos] = useState<string[]>([]); // User uploaded photos
     const [isMapModalVisible, setIsMapModalVisible] = useState(false);
+    const [building, setBuilding] = useState<CampusLocation | undefined>(CAMPUS_BUILDINGS.find(b => b.id === id));
+    const [loading, setLoading] = useState(true);
 
-    const room = ALL_ROOMS.find(r => r.id === id);
+    React.useEffect(() => {
+        const fetchBuilding = async () => {
+            setLoading(true);
+            try {
+                const buildings = await getBuildings();
+                const found = buildings.find(b => b.id === id);
+                if (found) {
+                    setBuilding(found);
+                }
+            } catch (e) {
+                console.error('Failed to fetch building detail', e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchBuilding();
+    }, [id]);
 
-    if (!room) {
+    if (loading) {
         return (
             <View style={styles.errorContainer}>
-                <Text>Classroom not found</Text>
+                <ActivityIndicator size="large" color="#1E3A8A" />
+            </View>
+        );
+    }
+
+    if (!building) {
+        return (
+            <View style={styles.errorContainer}>
+                <Text>Building not found</Text>
                 <TouchableOpacity onPress={() => router.back()}>
                     <Text style={styles.backLink}>Back to list</Text>
                 </TouchableOpacity>
@@ -51,30 +79,6 @@ export default function ClassroomDetail() {
         }
     };
 
-    const generateMapHTML = () => {
-        return `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-                <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-                <style>
-                    * { margin: 0; padding: 0; }
-                    html, body, #map { height: 100%; width: 100%; }
-                </style>
-            </head>
-            <body>
-                <div id="map"></div>
-                <script>
-                    var map = L.map('map', { zoomControl: false, dragging: false, touchZoom: false }).setView([${room.coordinates.lat}, ${room.coordinates.lng}], 17);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                    L.marker([${room.coordinates.lat}, ${room.coordinates.lng}]).addTo(map);
-                </script>
-            </body>
-            </html>
-        `;
-    };
 
     return (
         <View style={styles.container}>
@@ -83,7 +87,7 @@ export default function ClassroomDetail() {
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <ChevronLeft size={24} color="#111" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{room.name}</Text>
+                <Text style={styles.headerTitle} numberOfLines={1}>{building.name}</Text>
                 <TouchableOpacity style={styles.shareButton}>
                     <Share2 size={20} color="#111" />
                 </TouchableOpacity>
@@ -100,7 +104,7 @@ export default function ClassroomDetail() {
                         </ScrollView>
                     ) : (
                         <View style={styles.photoPlaceholder}>
-                            <Text style={styles.placeholderIcon}>{getRoomIcon(room.type)}</Text>
+                            <Text style={styles.placeholderIcon}>🏫</Text>
                             <Text style={styles.placeholderText}>No real-life photos yet</Text>
                             <TouchableOpacity style={styles.uploadBtn} onPress={handleUploadPhoto}>
                                 <Camera size={18} color="#fff" />
@@ -114,94 +118,33 @@ export default function ClassroomDetail() {
                 <View style={styles.infoCard}>
                     <View style={styles.infoRow}>
                         <View style={styles.badge}>
-                            <Text style={styles.badgeText}>{room.type}</Text>
-                        </View>
-                        <View style={[styles.badge, styles.floorBadge]}>
-                            <Text style={styles.floorBadgeText}>{room.floor} Floor</Text>
+                            <Text style={styles.badgeText}>Name</Text>
                         </View>
                     </View>
 
                     <Text style={styles.buildingName}>
-                        <Building size={16} color="#1E3A8A" /> {room.buildingFull}
+                        <Building size={16} color="#1E3A8A" /> {building.description} ({building.name})
                     </Text>
 
-                    <View style={styles.divider} />
-
-                    <View style={styles.locationSection}>
-                        <View style={styles.sectionHeaderRow}>
-                            <Text style={styles.sectionTitle}>🗺️ Location</Text>
-                            <TouchableOpacity
-                                style={styles.floorPlanBtn}
-                                onPress={() => setIsMapModalVisible(true)}
-                            >
-                                <Map size={14} color="#1E3A8A" />
-                                <Text style={styles.floorPlanBtnText}>Floor Plan</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.mapWrap}>
-                            <WebView
-                                source={{ html: generateMapHTML() }}
-                                style={styles.miniMap}
-                                javaScriptEnabled={true}
-                                domStorageEnabled={true}
-                            />
-                        </View>
-
-                        <View style={styles.pathHint}>
-                            <MapPin size={16} color="#EF4444" />
-                            <Text style={styles.pathText}>Near the main elevator in {room.building}</Text>
-                        </View>
-                    </View>
                 </View>
 
                 {/* Actions */}
                 <View style={styles.actionRow}>
-                    <TouchableOpacity style={styles.navButton}>
+                    <TouchableOpacity style={styles.navButton} onPress={() => {
+                        router.push({
+                            pathname: '/(tabs)/map',
+                            params: {
+                                navLat: building.coordinates.latitude,
+                                navLng: building.coordinates.longitude,
+                                navName: building.name
+                            }
+                        } as any);
+                    }}>
                         <Navigation size={20} color="#fff" />
                         <Text style={styles.navButtonText}>Start Navigation</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
-
-            {/* Floor Plan Fullscreen Modal */}
-            <Modal
-                visible={isMapModalVisible}
-                transparent={false}
-                animationType="fade"
-                onRequestClose={() => setIsMapModalVisible(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Floor Plan: {room.building}</Text>
-                        <TouchableOpacity
-                            style={styles.modalCloseBtn}
-                            onPress={() => setIsMapModalVisible(false)}
-                        >
-                            <X size={24} color="#fff" />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Using Zoomable View for Floor Plan */}
-                    <ScrollView
-                        maximumZoomScale={5}
-                        minimumZoomScale={1}
-                        showsHorizontalScrollIndicator={false}
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={styles.zoomWrapper}
-                    >
-                        <Image
-                            source={require('../../assets/images/maps/Floor-plan.jpg')}
-                            style={styles.fullFloorPlan}
-                            resizeMode="contain"
-                        />
-                    </ScrollView>
-
-                    <View style={styles.modalFooter}>
-                        <Text style={styles.modalHint}>Pinch to zoom · Drag to pan</Text>
-                    </View>
-                </View>
-            </Modal>
         </View>
     );
 }
@@ -210,7 +153,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F9FAFB' },
     header: { paddingTop: 56, paddingBottom: 16, paddingHorizontal: 20, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#eee' },
     backButton: { padding: 4 },
-    headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#111' },
+    headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#111', flex: 1, textAlign: 'center' },
     shareButton: { padding: 4 },
     content: { paddingBottom: 40 },
     photoSection: { height: 220, backgroundColor: '#E5E7EB' },
@@ -225,15 +168,11 @@ const styles = StyleSheet.create({
     infoRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
     badge: { backgroundColor: '#F3E8FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
     badgeText: { color: '#1E3A8A', fontSize: 12, fontWeight: 'bold' },
-    floorBadge: { backgroundColor: '#E0F2FE' },
-    floorBadgeText: { color: '#0369A1', fontSize: 12, fontWeight: 'bold' },
     buildingName: { fontSize: 16, color: '#374151', marginBottom: 16, fontWeight: '500' },
     divider: { height: 1, backgroundColor: '#F3F4F6', marginBottom: 16 },
     locationSection: { marginBottom: 8 },
     sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
     sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#111' },
-    floorPlanBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3E8FF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
-    floorPlanBtnText: { color: '#1E3A8A', fontSize: 12, fontWeight: '600', marginLeft: 6 },
     mapWrap: { height: 150, borderRadius: 12, overflow: 'hidden', backgroundColor: '#eee' },
     miniMap: { flex: 1 },
     pathHint: { flexDirection: 'row', alignItems: 'center', marginTop: 12, backgroundColor: '#FFF7ED', padding: 10, borderRadius: 8 },
@@ -243,15 +182,5 @@ const styles = StyleSheet.create({
     navButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginLeft: 8 },
     errorContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     backLink: { color: '#1E3A8A', marginTop: 12, fontWeight: 'bold' },
-
-    // Modal Styles
-    modalContainer: { flex: 1, backgroundColor: '#000' },
-    modalHeader: { paddingTop: 60, paddingBottom: 20, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,0,0,0.8)' },
-    modalTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-    modalCloseBtn: { padding: 4 },
-    zoomWrapper: { flexGrow: 1, justifyContent: 'center', alignItems: 'center' },
-    fullFloorPlan: { width: width, height: height * 0.7 },
-    modalFooter: { padding: 20, alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.8)' },
-    modalHint: { color: '#9CA3AF', fontSize: 12 },
 });
 

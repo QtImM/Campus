@@ -1,0 +1,11 @@
+appId: host.exp.exponent
+---
+- tapOn: "首页"
+- assertVisible: "校园圈"
+- tapOn:
+          id: "new-post-fab"
+- assertVisible: "发帖"
+- tapOn: "说说你的看法..."
+- inputText: "This is a Maestro E2E test post!"
+- tapOn: "发布"
+- assertVisible: "最新"

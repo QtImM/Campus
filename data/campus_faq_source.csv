@@ -1,0 +1,3 @@
+category_id,category_name,category_name_zh,faq_id,question,question_zh,answer,answer_zh,keywords,related_links
+it_services,IT Services,IT服务,it_001,What is SSOid?,什么是SSOid？,"SSOid is a unique login account.","SSOid是唯一登录账户。","SSOid, login, account","https://ito.hkbu.edu.hk/"
+library,Library Services,图书馆服务,lib_001,What are the hours?,图书馆时间？,"Open 8:30am - 11:00pm.","上午8:30-晚上11:00开放。","hours, opening, time","https://library.hkbu.edu.hk/"

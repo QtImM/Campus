@@ -1,0 +1,6 @@
+{
+    "model": "deepseek-chat (Agent Version 1.2)",
+    "test_cases": 2,
+    "average_score": 0.95,
+    "status": "PASS"
+}

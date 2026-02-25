@@ -8,10 +8,15 @@ const TEAMING_COMMENTS_TABLE = 'teaming_comments';
  * Fetch teaming requests for a specific course.
  */
 export const fetchTeamingRequests = async (courseId: string): Promise<CourseTeaming[]> => {
+    // Skip DB query for local/offline courses to avoid UUID type mismatch
+    if (courseId.startsWith('local_')) {
+        return getMockTeaming(courseId);
+    }
+
     try {
         const { data, error } = await supabase
             .from(TEAMING_TABLE)
-            .select('*')
+            .select('*, author:users!user_id(*)')
             .eq('course_id', courseId)
             .eq('status', 'open')
             .order('created_at', { ascending: false });
@@ -103,7 +108,7 @@ export const fetchTeamingComments = async (teamingId: string): Promise<TeamingCo
     try {
         const { data, error } = await supabase
             .from(TEAMING_COMMENTS_TABLE)
-            .select('*')
+            .select('*, author:users!author_id(*)')
             .eq('teaming_id', teamingId)
             .order('created_at', { ascending: true });
 
@@ -147,47 +152,42 @@ export const postTeamingComment = async (teamingId: string, author: any, content
 };
 
 // Helper functions
-const mapSupabaseToTeaming = (data: any): CourseTeaming => ({
-    id: data.id,
-    courseId: data.course_id,
-    userId: data.user_id,
-    userName: data.user_name,
-    userAvatar: data.user_avatar,
-    userMajor: data.user_major,
-    section: data.section,
-    selfIntro: data.self_intro,
-    targetTeammate: data.target_teammate,
-    contacts: data.contacts,
-    createdAt: new Date(data.created_at),
-    status: data.status,
-    likes: data.likes || 0,
-    commentCount: data.comment_count || 0,
-});
+const mapSupabaseToTeaming = (data: any): CourseTeaming => {
+    const author = data.author;
+    return {
+        id: data.id,
+        courseId: data.course_id,
+        userId: data.user_id,
+        userName: author ? (author.display_name || author.displayName) : data.user_name,
+        userAvatar: author ? author.avatar_url : data.user_avatar,
+        userMajor: author ? author.major : data.user_major,
+        section: data.section,
+        selfIntro: data.self_intro,
+        targetTeammate: data.target_teammate,
+        contacts: data.contacts,
+        createdAt: new Date(data.created_at),
+        status: data.status,
+        likes: data.likes || 0,
+        commentCount: data.comment_count || 0,
+    };
+};
 
-const mapSupabaseToTeamingComment = (data: any): TeamingComment => ({
-    id: data.id,
-    teamingId: data.teaming_id,
-    authorId: data.author_id,
-    authorName: data.author_name,
-    authorAvatar: data.author_avatar,
-    content: data.content,
-    createdAt: new Date(data.created_at),
-});
+const mapSupabaseToTeamingComment = (data: any): TeamingComment => {
+    const author = data.author;
+    return {
+        id: data.id,
+        teamingId: data.teaming_id,
+        authorId: data.author_id,
+        authorName: author ? (author.display_name || author.displayName) : data.author_name,
+        authorAvatar: author ? author.avatar_url : data.author_avatar,
+        content: data.content,
+        createdAt: new Date(data.created_at),
+    };
+};
 
 const incrementTeamingCommentCount = async (teamingId: string) => {
     try {
-        const { data: teaming } = await supabase
-            .from(TEAMING_TABLE)
-            .select('comment_count')
-            .eq('id', teamingId)
-            .single();
-
-        if (teaming) {
-            await supabase
-                .from(TEAMING_TABLE)
-                .update({ comment_count: (teaming.comment_count || 0) + 1 })
-                .eq('id', teamingId);
-        }
+        await supabase.rpc('increment_teaming_comment_count', { row_id: teamingId });
     } catch (e) {
         console.error('Error incrementing comment count:', e);
     }

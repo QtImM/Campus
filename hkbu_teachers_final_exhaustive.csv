@@ -1,0 +1,191 @@
+Faculty,Department,Name,Title,ImageURL,Email,SourceURL
+Science,Physics,"Prof. SO, Shu Kong",Head and Professor,,,
+Science,Physics,"Prof. TIAN, Liang",Associate HeadAssociate Professor,,,
+Science,Physics,"Prof. SHI, Jue Jade",Associate Dean (Teaching and Learning)Professor,,,
+Science,Physics,"Prof. ZHU, Furong","Associate Dean (Research and Postgraduate Studies)Chair Professor in PhysicsDirector, Institute of Advanced Materials",,,
+Science,Physics,Prof. Thomas KNOPFEL,"STEM Professor – Chair Professor in PhysicsDirector, JC STEM Lab of Neuronal Circuit Dynamics",,,
+Science,Physics,"Prof. WAI, Ping-kong Alexander","PhD, FHKIE, FHKEng, FOSA, FIEEEPresident and Vice-ChancellorChair Professor of Photonics",,,
+Science,Physics,"Prof. ZHOU, Chang Song",Chair Professor in Physics and Complex Systems,,,
+Science,Physics,"Prof. MA, Guancong",Professor,,,
+Science,Physics,"Prof. LI, Songsong",Assistant Professor,,,
+Science,Physics,"Prof. TANG, Qianyuan",Assistant ProfessorYear 4 Tutor,,,
+Science,Physics,"Prof. WANG, Shancheng",Assistant Professor,,,
+Science,Physics,"Prof. WANG, Shu-jen",Assistant ProfessorYear 3 Tutor,,,
+Science,Physics,"Prof. ZENG, Xiangze",Assistant ProfessorYear 2 Tutor,,,
+Science,Physics,"Dr LI, Zhen",Research Assistant Professor,,,
+Science,Physics,"Dr MING, Chang",Research Assistant Professor,,,
+Science,Physics,"Dr CHAN, Mau Hing",Senior Lecturer,,,
+Science,Physics,"Dr CHOI, Wing Hong",Lecturer,,,
+Science,Physics,"Dr HU, Qian",Lecturer,,,
+Science,Physics,"Dr MA, Lik Kuen",Lecturer,,,
+Science,Physics,"Prof. ZHENG, Wanhua",Honorary Professor,,,
+Science,Physics,"Prof. CHEAH, Kok Wai",Professor Emeritus,,,
+Science,Physics,"Prof. CHEUNG, Nai Ho",Professor Emeritus,,,
+Science,Physics,Prof. Michel A. Van Hove,Professor Emeritus,,,
+Science,Physics,"Prof. TANG, Lei Han",Professor Emeritus,,,
+Science,Physics,Dr CHENG Xingye,Research Staff,,xingye@hkbu.edu.hk,
+Science,Physics,Dr GAO Mingsheng,Research Staff,,gao-ms@hkbu.edu.hk,
+Science,Physics,Miss Wang Dongyi,Research Staff,,phwang@hkbu.edu.hk,
+Science,Physics,wanglingjie,Research Staff,,wanglingjie@hkbu.edu.hk,
+Science,Physics,mifeng,Research Staff,,mifeng@hkbu.edu.hk,
+Science,Physics,haoranli_phys,Research Staff,,haoranli_phys@hkbu.edu.hk,
+Science,Physics,voxwong,Research Staff,,voxwong@hkbu.edu.hk,
+Science,Physics,kennethssuen,Research Staff,,kennethssuen@hkbu.edu.hk,
+Science,Physics,smdevan,Research Staff,,smdevan@hkbu.edu.hk,
+Science,Physics,jitianzhang,Research Staff,,jitianzhang@hkbu.edu.hk,
+Science,Physics,likwantung,Research Staff,,likwantung@hkbu.edu.hk,
+Science,Physics,lucongwei,Research Staff,,lucongwei@hkbu.edu.hk,
+Science,Physics,jhossen,Research Staff,,jhossen@hkbu.edu.hk,
+Science,Physics,melody9628,Research Staff,,melody9628@hkbu.edu.hk,
+Science,Physics,rudaipan,Research Staff,,rudaipan@hkbu.edu.hk,
+Science,Physics,qiuxiaopeng,Research Staff,,qiuxiaopeng@hkbu.edu.hk,
+Science,Physics,dingwang,Research Staff,,dingwang@hkbu.edu.hk,
+Science,Physics,xuen-bu,Research Staff,,xuen-bu@hkbu.edu.hk,
+Science,Physics,zhangh,Research Staff,,zhangh@hkbu.edu.hk,
+Science,Physics,agcraig,Research Staff,,agcraig@hkbu.edu.hk,
+Science,Physics,guoxinmeng,Research Staff,,guoxinmeng@hkbu.edu.hk,
+Science,Physics,bltang,Research Staff,,bltang@hkbu.edu.hk,
+Science,Physics,leiming_yuan,Research Staff,,leiming_yuan@hkbu.edu.hk,
+Science,Physics,yuanyan,Research Staff,,yuanyan@hkbu.edu.hk,
+Science,Physics,Ms. Chrissy Cheng,Senior Executive Officer,,chrissycheng@hkbu.edu.hk,
+Science,Physics,Ms. Eve Li,Executive Officer,,yyli@hkbu.edu.hk,
+Science,Physics,Ms. May Kwok,Executive Officer,,maykwok@hkbu.edu.hk,
+Science,Physics,Ms. Jiaqi Song,Assistant Executive Officer,,songjiaqi@hkbu.edu.hk,
+Science,Physics,Ms. Amelia Cheng,Senior Scientific Officer,,skcheng@hkbu.edu.hk,
+Science,Mathematics,Michael NG,Chair Professor,,michael-ng@hkbu.edu.hk,
+Science,Mathematics,Yifan CHEN,Professor,,yifanc@hkbu.edu.hk,
+Science,Mathematics,Ming-Yen CHENG,Professor,,chengmingyen@hkbu.edu,
+Science,Mathematics,Shun Ling CHIANG,Dr.,,gcling@hkbu.edu,
+Science,Mathematics,PENG Heng,Professor,,hpeng@hkbu.edu.hk,
+Science,Mathematics,TONG Tiejun,Professor,,tongt@hkbu.edu.hk,
+Science,Mathematics,XU Yi Da,Professor,,xuyida@hkbu.edu.hk,
+Science,Mathematics,DON Wai Sun,Visiting Professor,,donwaisun@hkbu.edu.hk,
+Science,Mathematics,FAN Jun,Associate Professor,,junfan@hkbu.edu.hk,
+Science,Mathematics,LIU Hao,Assistant Professor,,haoliu@hkbu.edu.hk,
+Science,Mathematics,Sean HON Yu Sing,Assistant Professor,,seanyshon@hkbu.edu.hk,
+Science,Mathematics,TANG Xindong,Assistant Professor,,xdtang@hkbu.edu.hk,
+Science,Mathematics,YAO Shunan,Assistant Professor,,yaoshunan@hkbu.edu.hk,
+Science,Mathematics,ZHOU Le,Assistant Professor,,lezhou@hkbu.edu.hk,
+Science,Mathematics,Amir NOORIZADEGAN,Research Assistant Professor,,amir_noori@hkbu.edu.hk,
+Science,Mathematics,MA Shu,Research Assistant Professor,,shu_ma@hkbu.edu.hk,
+Science,Mathematics,PAN Junjun,Research Assistant Professor,,junjpan@hkbu.edu.hk,
+Science,Mathematics,XU Guangning,Research Assistant Professor,,xuguangning@hkbu.edu.hk,
+Science,Mathematics,Amy PANG Chung Yin,Lecturer,,amypang@hkbu.edu.hk,
+Science,Mathematics,Andy YAU Chin Ko,Lecturer,,chkyau@hkbu.edu.hk,
+Science,Mathematics,April LUO Dehui,Lecturer,,aprilldh02@hkbu.edu.hk,
+Science,Computer Science,"Prof. XU, Jianliang",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/xujl.jpg,xujl@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=xujl
+Science,Computer Science,"Prof. CHOI, Byron Koon Kau",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/choi.jpg,choi@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=choi
+Science,Computer Science,"Prof. CHEN, Li",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/lichen.jpg,lichen@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=lichen
+Science,Computer Science,"Prof. WONG, Martin Ding Fat",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/mdfwong.jpg,mdfwong@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=mdfwong
+Science,Computer Science,"Prof. LIU, Jiming",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/jiming.jpg,jiming@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=jiming
+Science,Computer Science,"Prof. CHEUNG, William Kwok Wai",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/william.jpg,william@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=william
+Science,Computer Science,"Prof. CHEUNG, Yiu Ming",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/ymc.jpg,ymc@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=ymc
+Science,Computer Science,"Prof. YUEN, Pong Chi",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/pcyuen.jpg,pcyuen@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=pcyuen
+Science,Computer Science,"Prof. NG, Michael Kwok Po",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/michael-ng.jpg,michael-ng@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=michael-ng
+Science,Computer Science,"Prof. LEUNG, Yiu Wing",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/ywleung.jpg,ywleung@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=ywleung
+Science,Computer Science,"Prof. D'INVERNO, Mark",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/dinverno.jpg,dinverno@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=dinverno
+Science,Computer Science,"Prof. KENDERDINE, Sarah Irene Brutton",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/kenderdine.jpg,kenderdine@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=kenderdine
+Science,Computer Science,"Prof. CHEN, Jie",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/chenjie.jpg,chenjie@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=chenjie
+Science,Computer Science,"Prof. DAI, Henry Hong Ning",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/henrydai.jpg,henrydai@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=henrydai
+Science,Computer Science,"Prof. HAN, Bo",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/bhanml.jpg,bhanml@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=bhanml
+Science,Computer Science,"Prof. HUANG, Xin",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/xinhuang.jpg,xinhuang@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=xinhuang
+Science,Computer Science,"Prof. ZHANG, Eric Lu",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/ericluzhang.jpg,ericluzhang@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=ericluzhang
+Science,Computer Science,"Prof. CHEN, Yifan",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/yifanc.jpg,yifanc@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=yifanc
+Science,Computer Science,"Prof. GUO, Xiaoqing",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/xiaoqingguo.jpg,xiaoqingguo@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=xiaoqingguo
+Science,Computer Science,"Prof. HUANG, Longkai",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/longkai.jpg,longkai@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=longkai
+Science,Computer Science,"Prof. LIU, Jinwei",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/jinweiliu.jpg,jinweiliu@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=jinweiliu
+Science,Computer Science,"Prof. LIU, Yang",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/csygliu.jpg,csygliu@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=csygliu
+Science,Computer Science,"Prof. MA, Jing",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/majing.jpg,majing@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=majing
+Science,Computer Science,"Prof. WAN, Renjie",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/renjiewan.jpg,renjiewan@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=renjiewan
+Science,Computer Science,"Prof. WANG, Juncheng",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/jcwang.jpg,jcwang@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=jcwang
+Science,Computer Science,"Prof. YANG, Renchi",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/renchi.jpg,renchi@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=renchi
+Science,Computer Science,"Prof. ZHOU, Amelie Chi",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/amelieczhou.jpg,amelieczhou@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=amelieczhou
+Science,Computer Science,"Prof. ZHOU, Kaiyang",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/kyzhou.jpg,kyzhou@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=kyzhou
+Science,Computer Science,"Dr. PIAO, Chengzhi",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/czpiao.jpg,czpiao@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=czpiao
+Science,Computer Science,"Dr. YIN, Kejing",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/cskjyin.jpg,cskjyin@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=cskjyin
+Science,Computer Science,"Dr. CHOY, Martin Man Ting",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/mtchoy.jpg,mtchoy@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=mtchoy
+Science,Computer Science,"Dr. LAI, Jean Hok Yin",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/jeanlai.jpg,jeanlai@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=jeanlai
+Science,Computer Science,"Dr. LI, Kristen Yuanxi",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/csyxli.jpg,csyxli@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=csyxli
+Science,Computer Science,"Dr. CHAN, Jacky Chun Pong",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/cpchan.jpg,cpchan@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=cpchan
+Science,Computer Science,"Dr. MA, Shichao",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/shichaoma.jpg,shichaoma@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=shichaoma
+Science,Computer Science,"Dr. SHEK, Sarah Pui Wah",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/sarahshek.jpg,sarahshek@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=sarahshek
+Science,Computer Science,"Dr. WANG, Kevin King Hang",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/kevinw.jpg,kevinw@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=kevinw
+Science,Computer Science,"Dr. XIAN, Poline Yin",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/polinexian.jpg,polinexian@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=polinexian
+Science,Computer Science,"Dr. YU, Wilson Shih Bun",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/wilsonyu.jpg,wilsonyu@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=wilsonyu
+Science,Computer Science,"Dr. ZHANG, Ce",Faculty Member,https://www.comp.hkbu.edu.hk/v1/photos/cezhang.jpg,cezhang@comp.hkbu.edu.hk,https://www.comp.hkbu.edu.hk/v1/?page=profile&id=cezhang
+Communication,Communication Studies,"ZHONG, Bu 鍾布",Dean and Professor院長兼教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/600x600/zhong-bu.jpg,zhongbu@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Prof-ZHONG-Bu.html
+Communication,Communication Studies,"CHAN, Kara. K. W. 陳家華",Associate Dean (Teaching and Learning)and Professor副院長兼教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/kara-chan.jpg,karachan@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/kara-ka-wah-chan.html
+Communication,Communication Studies,"FENG, Charles G. C. 馮廣超",Associate Dean (Postgraduate Studies) and Professor副院長兼教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/guangchao-s.png,charlesfeng@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Prof-FENG-Charles-G-C.html
+Communication,Communication Studies,"WEI, Ran 魏然",Associate Dean (Research and Development) and Chair Professor副院長兼講座教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/ran-wei.jpg,ranwei@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/ran-wei.html
+Communication,Communication Studies,"WONG, Raymond R. 黃應士",Adjunct Professor特邀教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/raymond-wong.jpg,,
+Communication,Communication Studies,"AITKEN, Ian",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/aitken-ian.jpg,,
+Communication,Communication Studies,"CHEN, Ling 陳凌",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/chen-ling.jpg,,
+Communication,Communication Studies,"CHEUK, Pak Tong 卓伯棠",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/cheuk-p-t.jpg,,
+Communication,Communication Studies,"GUO, Steve Z. S. 郭中實",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/guo-steve-z-s-new.jpg,,
+Communication,Communication Studies,"HUANG, Yu 黃煜",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/huang-yu.jpg,,
+Communication,Communication Studies,"LEE, Alice Y. L 李月蓮",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/lee-alice-y-l.jpg,,
+Communication,Communication Studies,"MA, Ringo C. L. 馬成龍",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/ma-ringo-c-l.jpg,,
+Communication,Communication Studies,"MAN, Eva K. W. 文潔華",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/man-eva-k-w.jpg,,
+Communication,Communication Studies,"POWERS, John H.",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/powers-john-h.jpg,,
+Communication,Communication Studies,"SHEER, Vivian 謝淳",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/sheer-vivian-new.jpg,,
+Communication,Communication Studies,"XIAO, Xiaosui 蕭小穗",Professor Emeritus 榮休教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/school-s-office/photo/xiao-xiaosui.jpg,,
+Communication,Communication Studies,"CHEN, Regina Y. R. 陳怡如",Head and Professor系主任兼教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/regina-chen.jpg,yrchen@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/yi-ru-regina-chen.html
+Communication,Communication Studies,"YEO, Dominic T. E. 楊天逸",Associate Head and AssociateProfessor副系主任兼副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/dominic-yeo.jpg,dominic@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/tien-ee-dominic-yeo.html
+Communication,Communication Studies,"CHAN, Kara K. W. 陳家華",Associate Dean and Professor副院長兼教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/kara-chan.jpg,karachan@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/kara-ka-wah-chan.html
+Communication,Communication Studies,"HUNG, Kineta H. K. 孔慶勤",Professor教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/kineta-hung.jpg,kineta@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/kineta-hung.html
+Communication,Communication Studies,"BARTELS, Jos",Associate Professor副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/600x600/Jos-Bartels.jpg,jbartels@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/jos-bartels.html
+Communication,Communication Studies,"CHANG, Leanne 張皪元",Associate Professor副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/600x600/Leanne-Chang.jpg,leannechang@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/leanne-chang.html
+Communication,Communication Studies,"MAK, Angela K. Y. 麥嘉盈",Associate Professor副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/angela-mak.jpg,angelamak@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/angela-mak.html
+Communication,Communication Studies,"TSANG, Stephanie J. 曾姿穎",Associate Professor副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/tsang-stephanie-j-new.jpg,stsang@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/stephanie-jean-tsang.html
+Communication,Communication Studies,"ZHOU, Vivien S. 周碩",Associate Professor副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/600x600/Vivien-Shuo-Zhou.jpg,shuozhou@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/vivien-shuo-zhou.html
+Communication,Communication Studies,"PARK, Keonyoung 朴謹詠",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/600x600/Keonyoung.jpg,kepark@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/keonyoung-park.html
+Communication,Communication Studies,"TACHKOVA, Elina R.",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/600x600/Elina600x600.jpg,elinatachkova@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/elina-tachkova.html
+Communication,Communication Studies,"XIE, Lola 謝宛穎",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/600x600/lola600x600.jpg,lolawxie@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/lola-wanying-xie.html
+Communication,Communication Studies,"CHEN, Anfan 陳安繁",Research Assistant Professor研究助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/600x600/Anfan-CHEN.jpg,anfanchen@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/anfan-chen.html
+Communication,Communication Studies,"LEUNG, Vivienne S. Y. 梁雪茵",Senior Lecturer高級講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/600x600/Vivienne-LEUNG.jpg,vivleung@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/vivienne-s-y-leung.html
+Communication,Communication Studies,"FU, Barbara Y. Y. 傅若茵",Lecturer講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/600x600/Barbara-FU-Picture.jpg,barbarafu@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/barbara-fu.html
+Communication,Communication Studies,"FUNG, Henry T. Y. 馮梓楊",Lecturer講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/henry-fung.jpg,henryfty@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/henry-fung.html
+Communication,Communication Studies,"SERBAN, Florin Constantin",Lecturer講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/communication-studies/photo/600x600/Florin-C-Serban.jpg,florinserban@hkbu.edu.hk,https://coms.hkbu.edu.hk/faculty-and-staff/florin-constantin-serban.html
+Communication,Communication Studies,"CHOW, Kenny K. N. 周嘉年",Head and Associate Professor系主任兼教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/kenny-chow.jpg,knchow@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Dr-Chow-Ka-Nin-Kenny.html
+Communication,Communication Studies,"LEE, Kelvin K. W. 李啟華",Associate Head and Associate Professor of Practice副系主任兼專業應用副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/kelvin-lee-s.png,kelvinee@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Dr-LEE-Kelvin-K-W.html
+Communication,Communication Studies,"FUNG, Timothy K. F. 馮繼峰",Associate Professor副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/timothy-fung-s.jpg,tfung@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Prof-FUNG-Timothy-K-F.html
+Communication,Communication Studies,"SHI, Jolie J. Y. 石靜遠",Associate Professor副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/600x600/Jolie%20Shi_s.jpg,jolieshi@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Prof-SHI-Jingyuan.html
+Communication,Communication Studies,"CHAN, Tik Fan 陳廸凡",Associate Professor of Practice,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/600x600/CT.jpg,tc_chan@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/TC-Chan.html
+Communication,Communication Studies,"HUANG, Vincent L. 黃 磊",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/600x600/Vincent%20Huang_s.jpg,vincenthuang@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Prof-HUANG-Vincent.html
+Communication,Communication Studies,"LI, Ivan Y. P. 李鈺鵬",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/lvanli-s.jpg,ypengl@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Prof-Yupeng-LI.html
+Communication,Communication Studies,"MUÑOZ, Daniel A.",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/daniel-munoz-profile.png,damunoz@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Prof-Daniel-A-Munoz.html
+Communication,Communication Studies,"NG, Yu Leung 吳雨良",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/yuleungng-half.jpg,yuleungng@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Dr-NG-Yu-Leung.html
+Communication,Communication Studies,"WANG, Sai 王賽",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/600x600/Sai%20Wang_s.jpg,saiwang@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Prof-WANG-Sai.html
+Communication,Communication Studies,"YE, Hui 叶卉",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/huiye.png,huiyehy@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Prof-Hui-Ye.html
+Communication,Communication Studies,"ZHU, Yuner 朱蘊兒",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/yuner-zhu-profile-s.jpg,yunerzhu@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Prof-ZHU-Yuner.html
+Communication,Communication Studies,"LAN, Liang 蘭亮",Senior Lecturer高級講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/lianglan-s.jpg,lanliang@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Dr-LAN-Liang.html
+Communication,Communication Studies,"MENGONI, Paolo",Senior Lecturer高級講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/paolo-mengoni-s.jpg,pmengoni@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Dr-MENGONI-Paolo.html
+Communication,Communication Studies,"SO, Zoie W. Y. 蘇慧怡",Senior Lecturer高級講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/zoie-so-wai-yi-s.jpg,zoieso@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Ms-SO-Wai-Yi-Zoie.html
+Communication,Communication Studies,"YU, Albert K.H. 余家豪",Senior Lecturer高級講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/kahoalbertyu-s.png,kahoyu@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Mr-YU-Ka-Ho-Albert.html
+Communication,Communication Studies,"CHAN, Wade L. T. 陳浪濤",Lecturer講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/interactive-media/photo/wade-chan-s.jpg,wadechan@hkbu.edu.hk,https://imd.hkbu.edu.hk/faculty-member/Mr-CHAN-Wade-L-T.html
+Communication,Communication Studies,"LI, Raymond 李文",Head and Professor of Practice系主任兼專業應用教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Raymond%20Li.jpg,raymondli@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/raymond-li.html
+Communication,Communication Studies,"LUQIU, Rose L. W. 閭丘露薇",Associate Head and Associate Professor副系主任兼副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Rose%20Luqiu.jpg,roseluqiu@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/luwei-rose-luqiu.html
+Communication,Communication Studies,"GEORGE, Cherian",Professor教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Cherian%20George.jpg,cherian@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/cherian-george.html
+Communication,Communication Studies,"TAN, Kenneth Paul 陳思賢",Professor教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Kenneth%20Paul%20Tan.jpg,kennethptan@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/kenneth-paul-tan.html
+Communication,Communication Studies,"THUSSU, Daya K.",Professor教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Daya%20Thussu.jpg,dayathussu@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/daya-thussu.html
+Communication,Communication Studies,"CHAN, King Cheung 陳景祥",Professor of Practice專業應用教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Chan%20King%20Cheung.jpg,chankc@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/chan-king-cheung.html
+Communication,Communication Studies,"PUN, Wai Lam 潘蔚林",Associate Professor of Practice專業應用副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Pun%20Wai%20Lam.jpg,punwailam@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/pun-wai-lam.html
+Communication,Communication Studies,"SO, Brian M. H. 蘇銘恒",Associate Professor of Practice專業應用副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Brian%20So.jpg,brianso@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/brian-so.html
+Communication,Communication Studies,"WANG, Xiangwei 王向偉",Associate Professor of Practice專業應用副教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Wang%20Xiangwei.jpg,wangxiangwei@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/wang-xiangwei.html
+Communication,Communication Studies,"CHUA,  Sherwin",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Sherwin%20Chua.jpg,sherwinchua@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/CHUA-Sherwin.html
+Communication,Communication Studies,"HU, An 胡岸",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Hu%20An.jpg,huan29@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/HU-An.html
+Communication,Communication Studies,"ZHANG, Nick Y. 張引",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Nick%20Yin%20Zhang.jpg,zhangyin@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/nick-yin-zhang.html
+Communication,Communication Studies,"ZOU, Sheng 鄒勝",Assistant Professor助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Zou%20Sheng.jpg,shengz@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/sheng-zou.html
+Communication,Communication Studies,"WANG, Angela D 王丹",Research Assistant Professor研究助理教授,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/WangDanAngela600x600.jpg,angelawd@hkbu.edu.hk,https://jour.hkbu.edu.hk/zh-hk/faculty/wang-dan-angela.html
+Communication,Communication Studies,"EWING, Robin G.",Senior Lecturer高級講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Robin%20Ewing.jpg,ewing@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/robin-ewing.html
+Communication,Communication Studies,"WANG, Bess Y. 王悅",Senior Lecturer高級講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Bess%20Wang.jpg,kenbess2000@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/bess-wang-yue.html
+Communication,Communication Studies,"FU, Xiaoyi 傅晓藝",Lecturer講師,https://www.hkbu.edu.hk/content/dam/comm-assets/people/faculty-members/journalism/photo/Fu%20Xiaoyi.jpg,xiaoyifu@hkbu.edu.hk,https://jour.hkbu.edu.hk/en/faculty/xiaoyi-fu.html
+Business,Management,Song CHANG,Professor,,schang@hkbu.edu.hk,
+Business,AEF,Byron SONG,Professor,,yangsong@hkbu.edu.hk,
+Business,MMIS,Christy MK CHEUNG,Professor,,ccheung@hkbu.edu.hk,
+Chinese Medicine,Teaching & Research,Lyu Aiping,Chair Professor,,aipinglu@hkbu.edu.hk,
+Chinese Medicine,Teaching & Research,Bian Zhaoxiang,Professor,,bzxiang@hkbu.edu.hk,
+Creative Arts,Visual Arts,Andreas KRATKY,Director,,,
+Creative Arts,Visual Arts,Jeffrey SHAW,Chair Professor,,,
+Arts & Social Sciences,Sociology,Adam K.L. CHEUNG,Associate Professor,,adamkl@hkbu.edu.hk,
+Arts & Social Sciences,Education,Sandy S C LI,Professor,,sandyli@hkbu.edu.hk,

@@ -196,7 +196,7 @@ export const getReviews = async (courseId: string): Promise<Review[]> => {
     // 2. Query Supabase
     const { data, error } = await supabase
         .from('course_reviews')
-        .select('*')
+        .select('*, author:users!author_id(*)')
         .eq('course_id', courseId)
         .order('created_at', { ascending: false });
 
@@ -205,20 +205,23 @@ export const getReviews = async (courseId: string): Promise<Review[]> => {
         return [];
     }
     if (!data) return [];
-    return data.map(r => ({
-        id: r.id,
-        courseId: r.course_id,
-        authorId: r.author_id,
-        authorName: r.author_name || 'Anonymous',
-        authorAvatar: r.author_avatar || '👤',
-        rating: r.rating,
-        difficulty: r.difficulty || 3,
-        content: r.content || '',
-        tags: [],
-        likes: r.likes || 0,
-        createdAt: new Date(r.created_at),
-        semester: r.semester || 'Current'
-    }));
+    return data.map(r => {
+        const author = r.author;
+        return {
+            id: r.id,
+            courseId: r.course_id,
+            authorId: r.author_id,
+            authorName: author ? (author.display_name || author.displayName) : (r.author_name || 'Anonymous'),
+            authorAvatar: author ? author.avatar_url : (r.author_avatar || '👤'),
+            rating: r.rating,
+            difficulty: r.difficulty || 3,
+            content: r.content || '',
+            tags: [],
+            likes: r.likes || 0,
+            createdAt: new Date(r.created_at),
+            semester: r.semester || 'Current'
+        };
+    });
 };
 
 export const hasUserReviewed = async (courseId: string, userId: string): Promise<boolean> => {

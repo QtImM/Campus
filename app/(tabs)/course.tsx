@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { ArrowLeftRight, BookOpen, ChevronLeft, Plus, Search, Star } from 'lucide-react-native';
+import { ArrowLeftRight, BookOpen, GraduationCap, Plus, Search, Star } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     FlatList,
     RefreshControl,
@@ -10,6 +11,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { Skeleton } from '../../components/common/Skeleton';
 import { getLocalCourses } from '../../services/courses';
 import { supabase } from '../../services/supabase';
 import { Course } from '../../types';
@@ -30,12 +32,32 @@ const MOCK_COURSES: Course[] = [
 
 export default function CoursesScreen() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
-    const [courses, setCourses] = useState<Course[]>(MOCK_COURSES);
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    const fetchCourses = async () => {
-        setRefreshing(true);
+    const CourseSkeleton = () => (
+        <View style={styles.skeletonCard}>
+            <View style={{ flex: 1 }}>
+                <Skeleton width="70%" height={18} style={{ marginBottom: 8 }} />
+                <Skeleton width="40%" height={12} style={{ marginBottom: 12 }} />
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <Skeleton width={60} height={20} borderRadius={10} />
+                    <Skeleton width={60} height={20} borderRadius={10} />
+                </View>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+                <Skeleton width={40} height={40} borderRadius={8} />
+            </View>
+        </View>
+    );
+
+    const fetchCourses = async (isSilent = false) => {
+        if (!isSilent && courses.length === 0) {
+            setLoading(true);
+        }
         try {
             // 1. Fetch from Supabase (may fail if table missing)
             const { data: dbData, error: dbError } = await supabase
@@ -82,13 +104,14 @@ export default function CoursesScreen() {
             });
             setCourses(fallback);
         } finally {
+            setLoading(false);
             setRefreshing(false);
         }
     };
 
     useFocusEffect(
         useCallback(() => {
-            fetchCourses();
+            fetchCourses(true); // Silent update on focus
         }, [])
     );
 
@@ -124,10 +147,10 @@ export default function CoursesScreen() {
                 </View>
             </View>
             <Text style={styles.courseName}>{item.name}</Text>
-            <Text style={styles.instructorText}>👨‍🏫 {item.instructor}</Text>
+            {/* <Text style={styles.instructorText}>👨‍🏫 {item.instructor}</Text> */}
             <View style={styles.cardFooter}>
                 <Text style={styles.deptText}>{item.department}</Text>
-                <Text style={styles.reviewCount}>{item.reviewCount} 条评价</Text>
+                <Text style={styles.reviewCount}>{t('teachers.reviews_count', { count: item.reviewCount })}</Text>
             </View>
         </TouchableOpacity>
     );
@@ -137,15 +160,16 @@ export default function CoursesScreen() {
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerRow}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                        <ChevronLeft size={24} color="#fff" />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Course Review</Text>
-                    <TouchableOpacity style={styles.addButton} onPress={handleAddCourse}>
-                        <Plus size={24} color="#fff" />
-                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>{t('courses.title')}</Text>
+                    <View style={styles.headerRightActions}>
+                        <TouchableOpacity style={styles.headerActionButton} onPress={() => router.push('/teachers' as any)}>
+                            <Star size={20} color="#fff" />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.headerActionButton} onPress={handleAddCourse}>
+                            <Plus size={24} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
-                <Text style={styles.headerSubtitle}>Find & Review your courses</Text>
             </View>
 
             {/* Search */}
@@ -154,7 +178,7 @@ export default function CoursesScreen() {
                     <Search size={20} color="#9CA3AF" />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Search course code, name or instructor..."
+                        placeholder={t('courses.search_placeholder')}
                         placeholderTextColor="#9CA3AF"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -171,20 +195,32 @@ export default function CoursesScreen() {
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
-                        onRefresh={fetchCourses}
+                        onRefresh={() => fetchCourses(true)}
                         tintColor="#1E3A8A"
                     />
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
                         <BookOpen size={48} color="#D1D5DB" />
-                        <Text style={styles.emptyText}>No courses found</Text>
+                        <Text style={styles.emptyText}>{t('courses.no_courses_found')}</Text>
                         <TouchableOpacity style={styles.addCourseButton} onPress={handleAddCourse}>
-                            <Text style={styles.addCourseText}>Add New Course</Text>
+                            <Text style={styles.addCourseText}>{t('courses.add_new_course')}</Text>
                         </TouchableOpacity>
                     </View>
                 }
             />
+
+            {/* Teacher Review FAB */}
+            <TouchableOpacity
+                testID="rate-fab"
+                style={styles.teacherFab}
+                onPress={() => router.push('/teachers' as any)}
+            >
+                <GraduationCap size={24} color="#fff" />
+                <View style={[styles.fabBadge, { backgroundColor: '#1E3A8A' }]}>
+                    <Text style={styles.fabBadgeText}>{t('teachers.rate')}</Text>
+                </View>
+            </TouchableOpacity>
 
             {/* Exchange FAB */}
             <TouchableOpacity
@@ -193,7 +229,7 @@ export default function CoursesScreen() {
             >
                 <ArrowLeftRight size={24} color="#fff" />
                 <View style={styles.fabBadge}>
-                    <Text style={styles.fabBadgeText}>换课</Text>
+                    <Text style={styles.fabBadgeText}>{t('teachers.swap')}</Text>
                 </View>
             </TouchableOpacity>
         </View>
@@ -204,6 +240,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F9FAFB',
+    },
+    skeletonCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     header: {
         paddingTop: 56,
@@ -219,21 +263,18 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 8,
     },
-    backButton: {
-        padding: 4,
+    headerRightActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
     },
-    addButton: {
+    headerActionButton: {
         padding: 4,
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#fff',
-    },
-    headerSubtitle: {
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.7)',
-        textAlign: 'center',
     },
     searchContainer: {
         paddingHorizontal: 20,
@@ -354,11 +395,11 @@ const styles = StyleSheet.create({
     },
     exchangeFab: {
         position: 'absolute',
-        bottom: 140, // High enough to clear any overlap
+        bottom: 110, // Adjust bottom to leave space
         right: 20,
-        width: 60, // Slightly larger
-        height: 60,
-        borderRadius: 30,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         backgroundColor: '#8B5CF6',
         alignItems: 'center',
         justifyContent: 'center',
@@ -366,23 +407,43 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
-        elevation: 15, // Higher elevation for Android
-        zIndex: 9999, // Extremely high zIndex for iOS
+        elevation: 10,
+        zIndex: 9999,
+    },
+    teacherFab: {
+        position: 'absolute',
+        bottom: 180, // Higher than exchangeFab
+        right: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#1E3A8A',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 10,
+        zIndex: 9999,
     },
     fabBadge: {
         position: 'absolute',
-        top: -8,
-        right: -4,
+        top: -10,
+        right: -6,
         backgroundColor: '#EF4444',
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 10,
-        borderWidth: 1,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 12,
+        borderWidth: 1.5,
         borderColor: '#fff',
+        minWidth: 40,
+        alignItems: 'center',
     },
     fabBadgeText: {
         color: '#fff',
         fontSize: 10,
-        fontWeight: 'bold',
+        fontWeight: '900',
+        textTransform: 'uppercase',
     },
 });

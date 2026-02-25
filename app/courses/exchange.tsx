@@ -23,6 +23,7 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
+    Image,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -65,16 +66,48 @@ export default function ExchangeScreen() {
     // Post Form State
     const [haveCourse, setHaveCourse] = useState('');
     const [haveSection, setHaveSection] = useState('');
-    const [haveInstructor, setHaveInstructor] = useState('');
+    const [haveTeacher, setHaveTeacher] = useState('');
     const [haveTime, setHaveTime] = useState('');
 
-    const [wantCourses, setWantCourses] = useState<ExchangeCourseDetail[]>([{ code: '', section: '', instructor: '', time: '' }]);
+    const [wantCourses, setWantCourses] = useState<ExchangeCourseDetail[]>([{ code: '', section: '', teacher: '', time: '' }]);
 
     const [reason, setReason] = useState('');
     const [selectedMethods, setSelectedMethods] = useState<ContactMethod['platform'][]>([]);
     const [contactValues, setContactValues] = useState<Record<string, string>>({});
     const [otherPlatformName, setOtherPlatformName] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    // Section Picker State
+    const [isSectionPickerVisible, setIsSectionPickerVisible] = useState(false);
+    const [pickerTarget, setPickerTarget] = useState<{ type: 'have' | 'want', index?: number } | null>(null);
+
+    const openSectionPicker = (type: 'have' | 'want', index?: number) => {
+        setPickerTarget({ type, index });
+        setIsSectionPickerVisible(true);
+    };
+
+    const handleSelectSection = (section: string) => {
+        if (!pickerTarget) return;
+
+        const currentVal = pickerTarget.type === 'have'
+            ? haveSection
+            : wantCourses[pickerTarget.index!].section || '';
+
+        let sections = currentVal ? currentVal.split(', ').filter(s => s.trim() !== '') : [];
+        if (sections.includes(section)) {
+            sections = sections.filter(s => s !== section);
+        } else {
+            sections = [...sections, section].sort((a, b) => parseInt(a) - parseInt(b));
+        }
+
+        const newVal = sections.join(', ');
+
+        if (pickerTarget.type === 'have') {
+            setHaveSection(newVal);
+        } else if (pickerTarget.type === 'want' && pickerTarget.index !== undefined) {
+            updateWantCourse(pickerTarget.index, 'section', newVal);
+        }
+    };
 
     useEffect(() => {
         loadExchanges();
@@ -123,6 +156,10 @@ export default function ExchangeScreen() {
 
         setSubmitting(true);
         try {
+            // Fetch the detailed profile to get the real major
+            const { getUserProfile } = await import('../../services/auth');
+            const profile = await getUserProfile(user.uid);
+
             const contacts: ContactMethod[] = selectedMethods.map(m => ({
                 platform: m,
                 value: contactValues[m],
@@ -131,12 +168,12 @@ export default function ExchangeScreen() {
 
             await postExchange({
                 userId: user.uid,
-                userName: user.displayName || 'Anonymous',
-                userAvatar: user.photoURL || '👤',
-                userMajor: 'CS (Placeholder)',
+                userName: profile?.displayName || user.displayName || 'Anonymous User',
+                userAvatar: profile?.avatarUrl || user.photoURL || '👤',
+                userMajor: profile?.major || 'General Student',
                 haveCourse,
                 haveSection,
-                haveInstructor,
+                haveTeacher,
                 haveTime,
                 wantCourses: validWants,
                 reason,
@@ -185,9 +222,9 @@ export default function ExchangeScreen() {
     const resetForm = () => {
         setHaveCourse('');
         setHaveSection('');
-        setHaveInstructor('');
+        setHaveTeacher('');
         setHaveTime('');
-        setWantCourses([{ code: '', section: '', instructor: '', time: '' }]);
+        setWantCourses([{ code: '', section: '', teacher: '', time: '' }]);
         setReason('');
         setSelectedMethods([]);
         setContactValues({});
@@ -195,7 +232,7 @@ export default function ExchangeScreen() {
     };
 
     const addWantCourse = () => {
-        setWantCourses([...wantCourses, { code: '', section: '', instructor: '', time: '' }]);
+        setWantCourses([...wantCourses, { code: '', section: '', teacher: '', time: '' }]);
     };
 
     const removeWantCourse = (index: number) => {
@@ -246,6 +283,15 @@ export default function ExchangeScreen() {
         }
     };
 
+    const renderAvatar = (avatar: string, style: any) => {
+        if (!avatar) return <Text style={style}>👤</Text>;
+        const isUrl = typeof avatar === 'string' && (avatar.startsWith('http') || avatar.startsWith('https'));
+        if (isUrl) {
+            return <Image source={{ uri: avatar }} style={style} />;
+        }
+        return <Text style={style}>{avatar}</Text>;
+    };
+
     const handleCopy = async (text: string, platform: string) => {
         await Clipboard.setStringAsync(text);
         Alert.alert('Copied', `${platform} ID copied to clipboard!`);
@@ -260,10 +306,10 @@ export default function ExchangeScreen() {
         <View style={styles.exchangeCard}>
             <View style={styles.cardHeader}>
                 <View style={styles.userInfo}>
-                    <Text style={styles.userAvatar}>{item.userAvatar}</Text>
-                    <View>
-                        <Text style={styles.userName}>{item.userName}</Text>
-                        <Text style={styles.userMajor}>{item.userMajor}</Text>
+                    {renderAvatar(item.userAvatar, styles.userAvatar)}
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.userName} numberOfLines={1}>{item.userName}</Text>
+                        <Text style={styles.userMajor} numberOfLines={1}>{item.userMajor}</Text>
                     </View>
                 </View>
                 <View style={styles.timeTag}>
@@ -288,10 +334,10 @@ export default function ExchangeScreen() {
                                 <Text style={styles.detailText}>{item.haveSection}</Text>
                             </View>
                         )}
-                        {item.haveInstructor && (
+                        {item.haveTeacher && (
                             <View style={styles.detailItem}>
                                 <User size={12} color="#8B5CF6" />
-                                <Text style={styles.detailText} numberOfLines={1}>{item.haveInstructor}</Text>
+                                <Text style={styles.detailText} numberOfLines={1}>{item.haveTeacher}</Text>
                             </View>
                         )}
                         {item.haveTime && (
@@ -329,10 +375,10 @@ export default function ExchangeScreen() {
                                             <Text style={[styles.detailText, { color: '#065F46', fontSize: 11 }]}>{want.section}</Text>
                                         </View>
                                     )}
-                                    {want.instructor && (
+                                    {want.teacher && (
                                         <View style={styles.detailItem}>
                                             <User size={10} color="#10B981" />
-                                            <Text style={[styles.detailText, { color: '#065F46', fontSize: 11 }]} numberOfLines={1}>{want.instructor}</Text>
+                                            <Text style={[styles.detailText, { color: '#065F46', fontSize: 11 }]} numberOfLines={1}>{want.teacher}</Text>
                                         </View>
                                     )}
                                     {want.time && (
@@ -509,20 +555,23 @@ export default function ExchangeScreen() {
                                             style={styles.input}
                                             placeholder="Course Code (e.g. COMP3015)"
                                             value={haveCourse}
-                                            onChangeText={setHaveCourse}
+                                            onChangeText={(text) => setHaveCourse(text.toUpperCase().replace(/[^A-Z0-9.]/g, ''))}
+                                            autoCapitalize="characters"
                                         />
                                         <View style={styles.rowInputs}>
-                                            <TextInput
-                                                style={[styles.input, { flex: 1, marginRight: 10, marginTop: 10 }]}
-                                                placeholder="Section (e.g. Sec1)"
-                                                value={haveSection}
-                                                onChangeText={setHaveSection}
-                                            />
+                                            <TouchableOpacity
+                                                style={[styles.input, { flex: 1, marginRight: 10, marginTop: 10, justifyContent: 'center' }]}
+                                                onPress={() => openSectionPicker('have')}
+                                            >
+                                                <Text style={{ color: haveSection ? '#111' : '#9CA3AF' }}>
+                                                    {haveSection ? `Section ${haveSection}` : 'Section'}
+                                                </Text>
+                                            </TouchableOpacity>
                                             <TextInput
                                                 style={[styles.input, { flex: 2, marginTop: 10 }]}
-                                                placeholder="Instructor Name"
-                                                value={haveInstructor}
-                                                onChangeText={setHaveInstructor}
+                                                placeholder="Teacher name"
+                                                value={haveTeacher}
+                                                onChangeText={setHaveTeacher}
                                             />
                                         </View>
                                         <TextInput
@@ -556,20 +605,23 @@ export default function ExchangeScreen() {
                                                     style={styles.input}
                                                     placeholder="Course Code (e.g. COMP3011)"
                                                     value={want.code}
-                                                    onChangeText={(text) => updateWantCourse(index, 'code', text)}
+                                                    onChangeText={(text) => updateWantCourse(index, 'code', text.toUpperCase().replace(/[^A-Z0-9.]/g, ''))}
+                                                    autoCapitalize="characters"
                                                 />
                                                 <View style={styles.rowInputs}>
-                                                    <TextInput
-                                                        style={[styles.input, { flex: 1, marginRight: 10, marginTop: 10 }]}
-                                                        placeholder="Section"
-                                                        value={want.section}
-                                                        onChangeText={(text) => updateWantCourse(index, 'section', text)}
-                                                    />
+                                                    <TouchableOpacity
+                                                        style={[styles.input, { flex: 1, marginRight: 10, marginTop: 10, justifyContent: 'center' }]}
+                                                        onPress={() => openSectionPicker('want', index)}
+                                                    >
+                                                        <Text style={{ color: want.section ? '#111' : '#9CA3AF' }}>
+                                                            {want.section ? `Section ${want.section}` : 'Section'}
+                                                        </Text>
+                                                    </TouchableOpacity>
                                                     <TextInput
                                                         style={[styles.input, { flex: 2, marginTop: 10 }]}
-                                                        placeholder="Instructor Name"
-                                                        value={want.instructor}
-                                                        onChangeText={(text) => updateWantCourse(index, 'instructor', text)}
+                                                        placeholder="Teacher name"
+                                                        value={want.teacher}
+                                                        onChangeText={(text) => updateWantCourse(index, 'teacher', text)}
                                                     />
                                                 </View>
                                                 <TextInput
@@ -656,6 +708,43 @@ export default function ExchangeScreen() {
                                     </TouchableOpacity>
                                     <View style={{ height: 40 }} />
                                 </ScrollView>
+
+                                {/* Inline Section Picker Overlay */}
+                                {isSectionPickerVisible && (
+                                    <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000 }]}>
+                                        <Pressable style={{ flex: 1 }} onPress={() => setIsSectionPickerVisible(false)} />
+                                        <View style={styles.pickerContent}>
+                                            <View style={styles.pickerHeader}>
+                                                <Text style={styles.pickerTitle}>Select Section</Text>
+                                                <TouchableOpacity onPress={() => setIsSectionPickerVisible(false)}>
+                                                    <X size={24} color="#6B7280" />
+                                                </TouchableOpacity>
+                                            </View>
+                                            <View style={styles.pickerGrid}>
+                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => {
+                                                    const currentSelection = (pickerTarget?.type === 'have' ? haveSection : wantCourses[pickerTarget?.index || 0]?.section || '');
+                                                    const isSelected = currentSelection.split(', ').includes(num.toString());
+
+                                                    return (
+                                                        <TouchableOpacity
+                                                            key={num}
+                                                            style={[styles.pickerItem, isSelected && styles.pickerItemActive]}
+                                                            onPress={() => handleSelectSection(num.toString())}
+                                                        >
+                                                            <Text style={[styles.pickerItemText, isSelected && styles.pickerItemTextActive]}>{num}</Text>
+                                                        </TouchableOpacity>
+                                                    );
+                                                })}
+                                            </View>
+                                            <TouchableOpacity
+                                                style={styles.pickerConfirmBtn}
+                                                onPress={() => setIsSectionPickerVisible(false)}
+                                            >
+                                                <Text style={styles.pickerConfirmText}>Confirm</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                )}
                             </View>
                         </KeyboardAvoidingView>
                     </View>
@@ -690,7 +779,7 @@ export default function ExchangeScreen() {
                                         keyExtractor={(item) => item.id}
                                         renderItem={({ item }) => (
                                             <View style={styles.commentRow}>
-                                                <Text style={styles.commentAvatar}>{item.authorAvatar}</Text>
+                                                {renderAvatar(item.authorAvatar, styles.commentAvatar)}
                                                 <View style={styles.commentInfo}>
                                                     <Text style={styles.commentAuthor}>{item.authorName}</Text>
                                                     <Text style={styles.commentText}>{item.content}</Text>
@@ -763,7 +852,7 @@ export default function ExchangeScreen() {
                     </View>
                 </Modal>
             </View>
-        </ScreenWrapper>
+        </ScreenWrapper >
     );
 }
 
@@ -838,7 +927,13 @@ const styles = StyleSheet.create({
     },
     userAvatar: {
         fontSize: 28,
+        width: 44,
+        height: 44,
         marginRight: 12,
+        borderRadius: 22,
+        textAlign: 'center',
+        textAlignVertical: 'center',
+        lineHeight: 44,
     },
     userName: {
         fontSize: 15,
@@ -1306,8 +1401,13 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     commentAvatar: {
-        fontSize: 28,
+        fontSize: 24,
+        width: 36,
+        height: 36,
         marginRight: 12,
+        borderRadius: 18,
+        textAlign: 'center',
+        lineHeight: 36,
     },
     commentInfo: {
         flex: 1,
@@ -1417,6 +1517,67 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#8B5CF6',
         fontWeight: '800',
+    },
+    // Section Picker Styles
+    pickerOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    pickerContent: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 24,
+        paddingBottom: 40,
+    },
+    pickerHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    pickerTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#111827',
+    },
+    pickerGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
+    pickerItem: {
+        width: '30%',
+        aspectRatio: 1,
+        backgroundColor: '#F3F4F6',
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
+    },
+    pickerItemText: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#111827',
+    },
+    pickerItemActive: {
+        backgroundColor: '#8B5CF6',
+    },
+    pickerItemTextActive: {
+        color: '#fff',
+    },
+    pickerConfirmBtn: {
+        backgroundColor: '#8B5CF6',
+        borderRadius: 12,
+        paddingVertical: 14,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    pickerConfirmText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
     },
 });
 

@@ -1,3 +1,4 @@
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import {
@@ -28,8 +29,29 @@ import {
     View
 } from 'react-native';
 import { ScreenWrapper } from '../../components/ui/ScreenWrapper';
+import { getCurrentUser } from '../../services/auth';
+import { addFoodReview, fetchFoodReviews, toggleFoodReviewLike, uploadFoodImage } from '../../services/food';
 
 const { width } = Dimensions.get('window');
+
+interface Review {
+    id: string;
+    outletId: string;
+    authorId: string;
+    authorName: string;
+    authorAvatar?: string;
+    rating: number;
+    likes: number;
+    isLiked?: boolean;
+    content: string;
+    createdAt: string;
+    replies?: Array<{
+        id: string;
+        author: string;
+        content: string;
+        time: string;
+    }>;
+}
 
 // Re-using the same data structure for now (In a real app, this would come from an API/Database)
 const DINING_OUTLETS = [
@@ -192,12 +214,52 @@ export default function OutletDetailScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
-    const [reviews, setReviews] = useState(MOCK_REVIEWS);
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [isPostModalVisible, setIsPostModalVisible] = useState(false);
+    const [currentUser, setCurrentUser] = useState<any>(null);
+
+    const loadReviews = async () => {
+        try {
+            setLoading(true);
+            const user = await getCurrentUser();
+            setCurrentUser(user);
+            const data = await fetchFoodReviews(id as string, user?.uid);
+            setReviews(data);
+        } catch (error) {
+            console.error('Error fetching food reviews:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        loadReviews();
+    }, [id]);
 
     // New Review Form State
     const [newRating, setNewRating] = useState(5);
     const [newContent, setNewContent] = useState('');
+    const [newImage, setNewImage] = useState<string | null>(null);
+
+    const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Sorry, we need camera roll permissions to make this work!');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
+        });
+
+        if (!result.canceled) {
+            setNewImage(result.assets[0].uri);
+        }
+    };
 
     // Reply State
     const [replyingToId, setReplyingToId] = useState<string | null>(null);
@@ -207,40 +269,64 @@ export default function OutletDetailScreen() {
         await WebBrowser.openBrowserAsync(url);
     };
 
-    const toggleLike = (reviewId: string) => {
-        setReviews(prev => prev.map(r => {
-            if (r.id === reviewId) {
-                const isLiked = (r as any).isLiked;
-                return {
-                    ...r,
-                    likes: isLiked ? r.likes - 1 : r.likes + 1,
-                    isLiked: !isLiked
-                };
+    const toggleLike = async (reviewId: string) => {
+        try {
+            if (!currentUser) {
+                router.push('/profile');
+                return;
             }
-            return r;
-        }));
+
+            await toggleFoodReviewLike(reviewId, currentUser.uid);
+
+            // Local update
+            setReviews(prev => prev.map(r => {
+                if (r.id === reviewId) {
+                    return {
+                        ...r,
+                        likes: r.isLiked ? r.likes - 1 : r.likes + 1,
+                        isLiked: !r.isLiked
+                    };
+                }
+                return r;
+            }));
+        } catch (error) {
+            console.error('Error toggling like:', error);
+        }
     };
 
-    const handlePostReview = () => {
-        if (!newContent.trim()) return;
+    const handlePostReview = async () => {
+        if (!newContent.trim() || !currentUser) return;
 
-        const newReview = {
-            id: `r${Date.now()}`,
-            outletId: id as string,
-            author: 'Me', // System user
-            rating: newRating,
-            content: newContent,
-            images: ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'], // Mock image for demo
-            likes: 0,
-            time: 'Just now',
-            timestamp: Date.now(),
-            replies: []
-        };
+        try {
+            setLoading(true);
+            let uploadedImages: string[] = [];
+            if (newImage) {
+                const imageUrl = await uploadFoodImage(newImage);
+                uploadedImages.push(imageUrl);
+            }
 
-        setReviews([newReview, ...reviews]);
-        setNewContent('');
-        setNewRating(5);
-        setIsPostModalVisible(false);
+            const newReview = await addFoodReview({
+                outletId: id as string,
+                authorId: currentUser.uid,
+                authorName: currentUser.displayName || 'Anonymous',
+                authorAvatar: currentUser.photoURL || undefined,
+                rating: newRating,
+                content: newContent,
+                images: uploadedImages
+            });
+
+            // Refresh list
+            loadReviews();
+            setNewContent('');
+            setNewRating(5);
+            setNewImage(null);
+            setIsPostModalVisible(false);
+        } catch (error: any) {
+            console.error('Error posting review:', error);
+            alert(`Failed to post review: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSendReply = (reviewId: string) => {
@@ -282,16 +368,16 @@ export default function OutletDetailScreen() {
     const outlet = DINING_OUTLETS.find(o => o.id === id) || DINING_OUTLETS[0];
 
     const sortedReviews = [...reviews].sort((a, b) => {
-        if (sortBy === 'newest') return b.timestamp - a.timestamp;
+        if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         return b.likes - a.likes;
     });
 
-    const renderReview = ({ item }: { item: typeof MOCK_REVIEWS[0] }) => (
+    const renderReview = ({ item }: { item: any }) => (
         <View style={styles.reviewCard}>
             <View style={styles.reviewHeader}>
                 <View>
-                    <Text style={styles.reviewAuthor}>{item.author}</Text>
-                    <Text style={styles.reviewTime}>{item.time}</Text>
+                    <Text style={styles.reviewAuthor}>{item.authorName}</Text>
+                    <Text style={styles.reviewTime}>{new Date(item.createdAt).toLocaleDateString()}</Text>
                 </View>
                 <View style={styles.ratingRow}>
                     {[...Array(5)].map((_, i) => (
@@ -307,7 +393,7 @@ export default function OutletDetailScreen() {
             <Text style={styles.reviewContent}>{item.content}</Text>
             {item.images.length > 0 && (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.reviewImages}>
-                    {item.images.map((img, idx) => (
+                    {(item.images || []).map((img: string, idx: number) => (
                         <Image key={idx} source={{ uri: img }} style={styles.reviewImage} />
                     ))}
                 </ScrollView>
@@ -340,7 +426,7 @@ export default function OutletDetailScreen() {
             {/* Sub-comments (Replies) */}
             {item.replies && item.replies.length > 0 && (
                 <View style={styles.repliesList}>
-                    {item.replies.map((reply) => (
+                    {(item.replies || []).map((reply: any) => (
                         <View key={reply.id} style={styles.replyItem}>
                             <View style={styles.replyHeader}>
                                 <Text style={styles.replyAuthor}>{reply.author}</Text>
@@ -534,17 +620,33 @@ export default function OutletDetailScreen() {
                             />
 
                             <Text style={styles.label}>Photos</Text>
-                            <TouchableOpacity style={styles.addPhotoSlot}>
-                                <Camera size={32} color="#9CA3AF" />
-                                <Text style={styles.addPhotoText}>Add Photos</Text>
+                            <TouchableOpacity style={styles.addPhotoSlot} onPress={pickImage}>
+                                {newImage ? (
+                                    <View>
+                                        <Image source={{ uri: newImage }} style={styles.previewImage} />
+                                        <TouchableOpacity
+                                            style={styles.removeImageBtn}
+                                            onPress={() => setNewImage(null)}
+                                        >
+                                            <X size={16} color="#fff" />
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : (
+                                    <>
+                                        <Camera size={32} color="#9CA3AF" />
+                                        <Text style={styles.addPhotoText}>Add Photos</Text>
+                                    </>
+                                )}
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={[styles.submitButton, !newContent.trim() && styles.submitButtonDisabled]}
+                                style={[styles.submitButton, (!newContent.trim() || loading) && styles.submitButtonDisabled]}
                                 onPress={handlePostReview}
-                                disabled={!newContent.trim()}
+                                disabled={!newContent.trim() || loading}
                             >
-                                <Text style={styles.submitButtonText}>Post Review</Text>
+                                <Text style={styles.submitButtonText}>
+                                    {loading ? 'Posting...' : 'Post Review'}
+                                </Text>
                             </TouchableOpacity>
                         </ScrollView>
                     </View>
@@ -932,5 +1034,21 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    previewImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 12,
+    },
+    removeImageBtn: {
+        position: 'absolute',
+        top: -8,
+        right: -8,
+        backgroundColor: '#EF4444',
+        borderRadius: 12,
+        width: 24,
+        height: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 });

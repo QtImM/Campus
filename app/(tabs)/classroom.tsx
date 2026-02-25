@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { ArrowLeftRight, ChevronRight, Search, Star, X } from 'lucide-react-native';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     FlatList,
     Keyboard,
@@ -10,88 +11,51 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-
-// HKBU Buildings and Classrooms Data - Keeping it consistent with previous implementation
-export const BUILDINGS = [
-    {
-        id: 'aab',
-        name: 'Academic and Administration Building (AAB)',
-        shortName: 'AAB',
-        coordinates: { lat: 22.3380, lng: 114.1813 },
-        rooms: [
-            { id: 'aab-101', name: 'AAB 101', floor: 1, type: 'Lecture Hall', capacity: 200 },
-            { id: 'aab-201', name: 'AAB 201', floor: 2, type: 'Classroom', capacity: 60 },
-            { id: 'aab-401', name: 'AAB 401', floor: 4, type: 'Computer Lab', capacity: 40 },
-        ]
-    },
-    {
-        id: 'dlb',
-        name: 'David C. Lam Building (DLB)',
-        shortName: 'DLB',
-        coordinates: { lat: 22.3375, lng: 114.1818 },
-        rooms: [
-            { id: 'dlb-101', name: 'DLB 101', floor: 1, type: 'Lecture Hall', capacity: 150 },
-            { id: 'dlb-201', name: 'DLB 201', floor: 2, type: 'Classroom', capacity: 55 },
-        ]
-    },
-    {
-        id: 'cva',
-        name: 'Communication and Visual Arts Building (CVA)',
-        shortName: 'CVA',
-        coordinates: { lat: 22.3382, lng: 114.1808 },
-        rooms: [
-            { id: 'cva-101', name: 'CVA 101', floor: 1, type: 'Studio', capacity: 30 },
-            { id: 'cva-201', name: 'CVA 201', floor: 2, type: 'Screening Room', capacity: 80 },
-        ]
-    }
-];
-
-export const ALL_ROOMS = BUILDINGS.flatMap(building =>
-    building.rooms.map(room => ({
-        ...room,
-        building: building.shortName,
-        buildingFull: building.name,
-        coordinates: building.coordinates,
-    }))
-);
-
-export const getRoomIcon = (type: string) => {
-    switch (type) {
-        case 'Lecture Hall': return '🎓';
-        case 'Classroom': return '📚';
-        case 'Computer Lab': return '💻';
-        case 'Studio': return '🎨';
-        case 'Screening Room': return '🎬';
-        default: return '🚪';
-    }
-};
+import { CAMPUS_BUILDINGS } from '../../data/buildings';
+import { getBuildings } from '../../services/buildings';
 
 export default function ClassroomIndex() {
+    const { t } = useTranslation();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [favorites, setFavorites] = useState<string[]>([]);
+    const [buildingsData, setBuildingsData] = useState(CAMPUS_BUILDINGS);
 
-    const filteredRooms = searchQuery.trim()
-        ? ALL_ROOMS.filter(room => {
+    React.useEffect(() => {
+        const fetchBuildings = async () => {
+            try {
+                const data = await getBuildings();
+                if (data && data.length > 0) {
+                    setBuildingsData(data);
+                }
+            } catch (e) {
+                console.error('Failed to fetch buildings for classroom tab', e);
+            }
+        };
+        fetchBuildings();
+    }, []);
+
+    const filteredBuildings = searchQuery.trim()
+        ? buildingsData.filter(b => {
             const query = searchQuery.toLowerCase();
             return (
-                (room.name || '').toLowerCase().includes(query) ||
-                (room.building || '').toLowerCase().includes(query) ||
-                (room.type || '').toLowerCase().includes(query)
+                (b.name || '').toLowerCase().includes(query) ||
+                (b.id || '').toLowerCase().includes(query) ||
+                (b.description || '').toLowerCase().includes(query)
             );
         })
-        : ALL_ROOMS;
+        : buildingsData;
 
-    const handleRoomSelect = (roomId: string) => {
-        router.push(`/classroom/${roomId}` as any);
+    const handleBuildingSelect = (buildingId: string) => {
+        router.push(`/classroom/${buildingId}` as any);
         Keyboard.dismiss();
     };
 
-    const toggleFavorite = (roomId: string) => {
-        if (favorites.includes(roomId)) {
-            setFavorites(favorites.filter(id => id !== roomId));
+    const toggleFavorite = (id: string) => {
+        if (favorites.includes(id)) {
+            setFavorites(favorites.filter(fav => fav !== id));
         } else {
-            setFavorites([...favorites, roomId]);
+            setFavorites([...favorites, id]);
         }
     };
 
@@ -101,8 +65,8 @@ export default function ClassroomIndex() {
             <View style={styles.header}>
                 <View style={styles.headerRow}>
                     <View style={styles.headerTitleContainer}>
-                        <Text style={styles.headerTitle}>找课程</Text>
-                        <Text style={styles.headerSubtitle}>Courses & Classrooms</Text>
+                        <Text style={styles.headerTitle}>{t('classroom_tab.title')}</Text>
+                        <Text style={styles.headerSubtitle}>{t('classroom_tab.subtitle')}</Text>
                     </View>
                 </View>
             </View>
@@ -113,7 +77,7 @@ export default function ClassroomIndex() {
                     <Search size={20} color="#9CA3AF" />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="搜索教室 (如 AAB 301, DLB...)"
+                        placeholder={t('classroom_tab.search_hint')}
                         placeholderTextColor="#9CA3AF"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -129,46 +93,47 @@ export default function ClassroomIndex() {
             {/* Favorites Section */}
             {favorites.length > 0 && !searchQuery && (
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>⭐ 收藏的教室</Text>
+                    <Text style={styles.sectionTitle}>⭐ {t('classroom_tab.favorites')}</Text>
                     <FlatList
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        data={ALL_ROOMS.filter(r => favorites.includes(r.id))}
+                        data={CAMPUS_BUILDINGS.filter(b => favorites.includes(b.id))}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 style={styles.favoriteCard}
-                                onPress={() => handleRoomSelect(item.id)}
+                                onPress={() => handleBuildingSelect(item.id)}
                             >
-                                <Text style={styles.favoriteIcon}>{getRoomIcon(item.type)}</Text>
-                                <Text style={styles.favoriteName}>{item.name}</Text>
+                                <Text style={styles.favoriteIcon}>🏫</Text>
+                                <Text style={styles.favoriteName} numberOfLines={1}>{item.name}</Text>
                             </TouchableOpacity>
                         )}
+                        contentContainerStyle={{ paddingHorizontal: 16 }}
                     />
                 </View>
             )}
 
-            {/* Room List */}
+            {/* Building List */}
             <View style={styles.listSection}>
                 <Text style={styles.sectionTitle}>
-                    {searchQuery ? `搜索结果 (${filteredRooms.length})` : '全部教室'}
+                    {searchQuery ? `${t('classroom_tab.results')} (${filteredBuildings.length})` : t('classroom_tab.all_buildings')}
                 </Text>
                 <FlatList
-                    data={filteredRooms}
+                    data={filteredBuildings}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContent}
                     renderItem={({ item }) => (
                         <TouchableOpacity
                             style={styles.roomCard}
-                            onPress={() => handleRoomSelect(item.id)}
+                            onPress={() => handleBuildingSelect(item.id)}
                         >
                             <View style={styles.roomIcon}>
-                                <Text style={styles.roomIconText}>{getRoomIcon(item.type)}</Text>
+                                <Text style={styles.roomIconText}>🏫</Text>
                             </View>
                             <View style={styles.roomInfo}>
                                 <Text style={styles.roomName}>{item.name}</Text>
-                                <Text style={styles.roomDetails}>
-                                    {item.floor}F · {item.type}
+                                <Text style={styles.roomDetails} numberOfLines={1}>
+                                    {item.description}
                                 </Text>
                             </View>
                             <TouchableOpacity
@@ -187,14 +152,14 @@ export default function ClassroomIndex() {
                 />
             </View>
 
-            {/* Course Exchange FAB (Redundancy) */}
+            {/* Exchange FAB (Still kept as per request to only change content) */}
             <TouchableOpacity
                 style={styles.exchangeFab}
                 onPress={() => router.push('/courses/exchange' as any)}
             >
                 <ArrowLeftRight size={24} color="#fff" />
                 <View style={styles.fabBadge}>
-                    <Text style={styles.fabBadgeText}>换课</Text>
+                    <Text style={styles.fabBadgeText}>{t('classroom_tab.swap_courses')}</Text>
                 </View>
             </TouchableOpacity>
         </View>
@@ -214,11 +179,11 @@ const styles = StyleSheet.create({
     searchInput: { flex: 1, fontSize: 15, color: '#111827', marginLeft: 10 },
     section: { paddingTop: 16, paddingBottom: 8 },
     sectionTitle: { fontSize: 14, fontWeight: '600', color: '#374151', paddingHorizontal: 16, marginBottom: 12 },
-    favoriteCard: { alignItems: 'center', backgroundColor: '#FEF3C7', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, marginLeft: 16, minWidth: 80 },
+    favoriteCard: { alignItems: 'center', backgroundColor: '#FEF3C7', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, marginRight: 12, maxWidth: 120 },
     favoriteIcon: { fontSize: 20, marginBottom: 4 },
     favoriteName: { fontSize: 12, fontWeight: '600', color: '#92400E' },
     listSection: { flex: 1, paddingTop: 8 },
-    listContent: { paddingHorizontal: 16, paddingBottom: 40 },
+    listContent: { paddingHorizontal: 16, paddingBottom: 100 },
     roomCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 14, borderRadius: 12, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
     roomIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F3E8FF', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
     roomIconText: { fontSize: 20 },
@@ -228,7 +193,7 @@ const styles = StyleSheet.create({
     favoriteButton: { padding: 8 },
     exchangeFab: {
         position: 'absolute',
-        bottom: 140,
+        bottom: 110,
         right: 20,
         width: 60,
         height: 60,

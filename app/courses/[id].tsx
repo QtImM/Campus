@@ -7,6 +7,7 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
+    Image,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -446,7 +447,13 @@ export default function CourseDetailScreen() {
         <View style={styles.reviewCard}>
             <View style={styles.reviewHeader}>
                 <View style={styles.authorInfo}>
-                    <Text style={styles.avatar}>{item.authorAvatar}</Text>
+                    <View style={styles.avatarContainer}>
+                        {item.authorAvatar && item.authorAvatar.length > 2 ? (
+                            <Image source={{ uri: item.authorAvatar }} style={styles.avatarImage} />
+                        ) : (
+                            <Text style={styles.avatarFallbackText}>{item.authorAvatar || '👤'}</Text>
+                        )}
+                    </View>
                     <View>
                         <Text style={styles.authorName}>{item.authorName}</Text>
                         <Text style={styles.semester}>{item.semester}</Text>
@@ -503,7 +510,13 @@ export default function CourseDetailScreen() {
         <View style={styles.teamingCard}>
             <View style={styles.teamingHeader}>
                 <View style={styles.authorInfo}>
-                    <Text style={styles.avatar}>{item.userAvatar}</Text>
+                    <View style={styles.avatarContainer}>
+                        {item.userAvatar && item.userAvatar.length > 2 ? (
+                            <Image source={{ uri: item.userAvatar }} style={styles.avatarImage} />
+                        ) : (
+                            <Text style={styles.avatarFallbackText}>{item.userAvatar || '👤'}</Text>
+                        )}
+                    </View>
                     <View>
                         <Text style={styles.authorName}>{item.userName}</Text>
                         <Text style={styles.userMajor}>{item.userMajor || 'Student'}</Text>
@@ -585,7 +598,7 @@ export default function CourseDetailScreen() {
                             <Text style={styles.codeText}>{course.code}</Text>
                         </View>
                         <Text style={styles.courseName}>{course.name}</Text>
-                        <Text style={styles.instructor}>Instructor: {course.instructor}</Text>
+                        {/* <Text style={styles.instructor}>Instructor: {course.instructor}</Text> */}
                         <View style={styles.statsRow}>
                             <View style={styles.statItem}>
                                 <Star size={20} color="#F59E0B" fill="#F59E0B" />
@@ -1296,7 +1309,23 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     authorInfo: { flexDirection: 'row', alignItems: 'center' },
-    avatar: { fontSize: 24, marginRight: 10 },
+    avatarContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#F3F4F6',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+    },
+    avatarFallbackText: {
+        fontSize: 18,
+    },
     authorName: { fontSize: 14, fontWeight: '600', color: '#111827' },
     semester: { fontSize: 11, color: '#9CA3AF' },
     reviewRating: {

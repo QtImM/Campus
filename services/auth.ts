@@ -1,16 +1,95 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { APP_CONFIG } from '../constants/Config';
 import { User } from '../types';
 import { supabase } from './supabase';
 
 const DEMO_MODE_KEY = 'hkcampus_demo_mode';
+const BIOMETRIC_KEY = 'hkcampus_biometric_enabled';
+const BIOMETRIC_CRED_KEY = 'hkcampus_user_credentials';
 
 // Helper to check if we are in demo mode
 export const isDemoMode = async () => {
+    // Priority 1: Check global production config
+    if (!APP_CONFIG.useDemoAuth) return false;
+
+    // Priority 2: Check local persistence (for switching modes inside app)
     const value = await AsyncStorage.getItem(DEMO_MODE_KEY);
     return value === 'true';
 };
 
-// Sign up
+// Helper to generate a random Bustar nickname
+export const generateDefaultNickname = () => {
+    const randomNum = Math.floor(100 + Math.random() * 900);
+    return `Bustar${randomNum}`;
+};
+
+// --- OTP Flow Functions ---
+
+/**
+ * Send a 6-digit OTP to the school email.
+ * For HKBU, we expect the email to end with @hkbu.edu.hk
+ */
+export const sendOTP = async (email: string) => {
+    const normalizedEmail = email.toLowerCase().trim();
+    const { error } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+            shouldCreateUser: true, // This enables the "Register/Login Combined" flow
+        }
+    });
+    if (error) throw error;
+};
+
+/**
+ * Verify the OTP entered by the user.
+ */
+export const verifyOTP = async (email: string, token: string) => {
+    const normalizedEmail = email.toLowerCase().trim();
+    const { data, error } = await supabase.auth.verifyOtp({
+        email: normalizedEmail,
+        token,
+        type: 'signup', // or 'sms' depending on config, but for email usually signup/magiclink
+    });
+
+    // If signup fails, try verification for login
+    if (error) {
+        const { data: loginData, error: loginError } = await supabase.auth.verifyOtp({
+            email: normalizedEmail,
+            token,
+            type: 'magiclink',
+        });
+        if (loginError) throw loginError;
+        return loginData.user ? { ...loginData.user, uid: loginData.user.id } : null;
+    }
+
+    return data.user ? { ...data.user, uid: data.user.id } : null;
+};
+
+// --- Biometric Authentication ---
+
+/**
+ * Check if the device hardware supports biometrics
+ */
+export const checkBiometricSupport = async () => {
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+    return hasHardware && isEnrolled;
+};
+
+/**
+ * Authenticate using Face ID or Fingerprint
+ */
+export const authenticateBiometric = async (): Promise<boolean> => {
+    const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: '请验证身份以登录 HKCampus',
+        fallbackLabel: '使用密码登录',
+        disableDeviceFallback: false,
+    });
+    return result.success;
+};
+
+// Sign up (Redirect to OTP)
 export const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
         email,
@@ -22,17 +101,50 @@ export const signUp = async (email: string, password: string) => {
 
 // Sign in
 export const signIn = async (email: string, password: string) => {
+    const normalizedEmail = email.toLowerCase().trim();
+    // Check for our special Demo Credentials first
+    if (APP_CONFIG.useDemoAuth &&
+        normalizedEmail === APP_CONFIG.demoCredentials.email.toLowerCase() &&
+        password === APP_CONFIG.demoCredentials.password) {
+        const demoUser = {
+            id: APP_CONFIG.demoCredentials.uid,
+            uid: APP_CONFIG.demoCredentials.uid,
+            email: normalizedEmail,
+            displayName: 'Demo Admin',
+            isDemo: true
+        };
+        // Persist demo mode
+        await AsyncStorage.setItem(DEMO_MODE_KEY, 'true');
+        return demoUser;
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
     });
     if (error) throw error;
+
+    // Clear demo mode if logging into a real account
+    await AsyncStorage.removeItem(DEMO_MODE_KEY);
+
     return data.user ? { ...data.user, uid: data.user.id } : null;
 };
 
 // Sign out
 export const signOut = async () => {
     await supabase.auth.signOut();
+    await AsyncStorage.removeItem(DEMO_MODE_KEY);
+};
+
+/**
+ * Update user password (used after OTP verification or in settings)
+ */
+export const updatePassword = async (password: string) => {
+    const { data, error } = await supabase.auth.updateUser({
+        password: password
+    });
+    if (error) throw error;
+    return data.user;
 };
 
 // Create user profile in Supabase (users table)
@@ -81,7 +193,12 @@ export const getUserProfile = async (uid: string): Promise<User | null> => {
         .eq('id', uid)
         .single();
 
-    if (error || !data) return null;
+    if (error) {
+        if (error.code === 'PGRST116') return null; // PostgREST error for "no rows returned"
+        console.error('Error fetching profile:', error);
+        throw error; // Rethrow actual errors (network, permissions, etc.)
+    }
+    if (!data) return null;
 
     // Map back to User type (snake_case -> camelCase)
     return {
@@ -107,18 +224,34 @@ export const onAuthChange = (callback: (user: any | null) => void) => {
 export const getCurrentUser = async () => {
     const isDemo = await isDemoMode();
     if (isDemo) {
+        const demoAvatar = 'https://ui-avatars.com/api/?name=Demo+Student&background=random';
         return {
-            uid: 'demo_user',
-            displayName: 'Demo User',
-            photoURL: 'https://ui-avatars.com/api/?name=Demo+User&background=random',
+            uid: APP_CONFIG.demoCredentials.uid,
+            displayName: 'Demo Student',
+            major: 'HKBU Student',
+            avatarUrl: demoAvatar,
+            photoURL: demoAvatar, // Backwards compatibility
             isAnonymous: false,
+            isDemo: true
         };
     }
 
     // For Supabase, check session
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-        return { ...session.user, uid: session.user.id };
+        const user = session.user;
+        const profile = await getUserProfile(user.id);
+        const avatar = profile?.avatarUrl || user.user_metadata?.avatar_url;
+
+        return {
+            ...user,
+            uid: user.id,
+            displayName: profile?.displayName || user.user_metadata?.display_name || 'Anonymous',
+            major: profile?.major || 'Student',
+            avatarUrl: avatar,
+            photoURL: avatar, // Backwards compatibility
+            socialTags: profile?.socialTags || []
+        };
     }
     return null;
 };

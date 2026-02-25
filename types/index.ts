@@ -46,6 +46,11 @@ export interface Post {
     imageUrl?: string;
     images?: string[];
     locationTag?: string;
+    location?: {
+        lat: number;
+        lng: number;
+        name?: string;
+    };
     geoPoint?: GeoPoint;
     createdAt: Date;
     timestamp?: Date;
@@ -131,7 +136,7 @@ export interface ContactMethod {
 export interface ExchangeCourseDetail {
     code: string;
     section?: string;
-    instructor?: string;
+    teacher?: string;
     time?: string;
 }
 
@@ -143,7 +148,7 @@ export interface CourseExchange {
     userMajor: string;
     haveCourse: string; // Course code
     haveSection?: string;
-    haveInstructor?: string;
+    haveTeacher?: string;
     haveTime?: string;
     wantCourses: ExchangeCourseDetail[]; // Support multiple choices
     reason?: string;
@@ -203,6 +208,37 @@ export interface AppNotification {
     contentPreview: string;
     createdAt: Date;
     read: boolean;
+}
+
+// Teacher Rating Types
+export interface Teacher {
+    id: string;
+    faculty: string;
+    department: string;
+    name: string;
+    title: string;
+    imageUrl: string;
+    email: string;
+    sourceUrl: string;
+    ratingAvg: number;
+    reviewCount: number;
+    tags: string[];
+}
+
+export interface TeacherReview {
+    id: string;
+    teacherId: string;
+    authorId: string;
+    authorName: string;
+    authorAvatar?: string;
+    rating: number;
+    difficulty: number;
+    workload: number;
+    content: string;
+    tags: string[];
+    likes: number;
+    isLiked?: boolean;
+    createdAt: Date;
 }
 
 // Navigation Types

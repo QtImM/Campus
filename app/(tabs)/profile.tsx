@@ -1,70 +1,134 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatDistanceToNow } from 'date-fns';
-import { useRouter } from 'expo-router';
-import { Bell, ChevronRight, Edit3, Eye, Heart as HeartIcon, HelpCircle, LogOut, MessageSquare, Shield, X } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { Alert, FlatList, Modal, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { signOut } from '../../services/auth';
-import { AppNotification } from '../../types';
+import * as Clipboard from 'expo-clipboard';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Bell, Bot, ChevronRight, Copy, Edit3, Globe, Heart as HeartIcon, HelpCircle, LogOut, Mail, MessageSquare, Sparkles, X } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ActivityIndicator, Alert, FlatList, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { createUserProfile, getCurrentUser, getUserProfile, signOut } from '../../services/auth';
+import { fetchNotifications, markAllAsRead, markAsRead, Notification, subscribeToNotifications } from '../../services/notifications';
+import { SOCIAL_TAGS, User as UserProfile } from '../../types';
+import { changeLanguage } from '../i18n/i18n';
 
 const DEMO_MODE_KEY = 'hkcampus_demo_mode';
 
-const SOCIAL_TAGS = [
-    'Library Ghost 📚', 'Coffee Addict ☕', 'Night Owl 🦉',
-    'Foodie 🍜', 'Gym Rat 💪', 'Cat Person 🐱',
-    'Music Lover 🎵', 'Tech Geek 💻', 'Film Buff 🎬'
-];
 
-const MOCK_NOTIFICATIONS: AppNotification[] = [
-    {
-        id: 'n1',
-        type: 'reply',
-        actorName: '小红',
-        relatedId: '1',
-        contentPreview: '回复了你：我也想去！是在AAB哪个广场？',
-        createdAt: new Date(Date.now() - 3600000), // 1 hour ago
-        read: false
-    },
-    {
-        id: 'n2',
-        type: 'like',
-        actorName: '阿强',
-        relatedId: '1',
-        contentPreview: '赞了你的帖子',
-        createdAt: new Date(Date.now() - 7200000), // 2 hours ago
-        read: true
-    },
-    {
-        id: 'n3',
-        type: 'reply',
-        actorName: '图书管理员',
-        relatedId: '3',
-        contentPreview: '回复了你：猫咪在三楼也出现了！',
-        createdAt: new Date(Date.now() - 86400000), // 1 day ago
-        read: false
-    }
+const LANGUAGE_OPTIONS = [
+    { key: 'zh-Hans', label: '简' },
+    { key: 'zh-Hant', label: '繁' },
+    { key: 'en', label: 'EN' },
 ];
 
 export default function ProfileScreen() {
     const router = useRouter();
-    const [ghostMode, setGhostMode] = useState(false);
-    const [selectedTags, setSelectedTags] = useState<string[]>(['Coffee Addict ☕', 'Night Owl 🦉']);
+    const { t, i18n } = useTranslation();
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const currentLang = i18n.language;
     const [showNotifications, setShowNotifications] = useState(false);
-    const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+    const [showHelp, setShowHelp] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [loadingNotifications, setLoadingNotifications] = useState(true);
+    const [loadingProfile, setLoadingProfile] = useState(true);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = notifications.filter(n => !n.is_read).length;
+
+    const loadData = async () => {
+        try {
+            const user = await getCurrentUser();
+            if (user) {
+                setUserId(user.uid);
+
+                // Load Notifications
+                const notifData = await fetchNotifications(user.uid);
+                setNotifications(notifData);
+
+                // Load Profile
+                const userProfile = await getUserProfile(user.uid);
+                if (userProfile) {
+                    setProfile(userProfile);
+                    setSelectedTags(userProfile.socialTags || []);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading data:', error);
+        } finally {
+            setLoadingNotifications(false);
+            setLoadingProfile(false);
+        }
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            loadData();
+        }, [])
+    );
+
+    useEffect(() => {
+        let subscription: any;
+        const initSubscription = async () => {
+            const user = await getCurrentUser();
+            if (user) {
+                subscription = subscribeToNotifications(user.uid, (payload) => {
+                    if (payload.new) {
+                        setNotifications(prev => [payload.new, ...prev]);
+                    }
+                });
+            }
+        };
+
+        initSubscription();
+
+        return () => {
+            if (subscription) subscription.unsubscribe();
+        };
+    }, []);
+
+    const handleNotificationPress = async (notification: Notification) => {
+        if (!notification.is_read) {
+            try {
+                await markAsRead(notification.id);
+                setNotifications(prev => prev.map(n =>
+                    n.id === notification.id ? { ...n, is_read: true } : n
+                ));
+            } catch (error) {
+                console.error('Error marking notification read:', error);
+            }
+        }
+
+        if (notification.related_id) {
+            setShowNotifications(false);
+            router.push('/courses/exchange');
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        if (!userId) return;
+        try {
+            await markAllAsRead(userId);
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+        } catch (error) {
+            console.error('Error marking all read:', error);
+        }
+    };
+
+    const handleLanguageChange = async (lang: string) => {
+        await changeLanguage(lang);
+    };
 
     const handleSignOut = () => {
         Alert.alert(
-            'Sign Out',
-            'Are you sure you want to sign out?',
+            t('profile.sign_out'),
+            t('profile.sign_out_confirm'),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Sign Out',
+                    text: t('profile.sign_out'),
                     style: 'destructive',
                     onPress: async () => {
-                        await signOut(); // Clear Supabase session
+                        await signOut();
                         await AsyncStorage.removeItem(DEMO_MODE_KEY);
                         router.replace('/(auth)/login');
                     }
@@ -73,13 +137,39 @@ export default function ProfileScreen() {
         );
     };
 
-    const toggleTag = (tag: string) => {
+    const handleCopyText = async (text: string) => {
+        await Clipboard.setStringAsync(text);
+        Alert.alert(t('common.tip'), t('profile.help_copied'));
+    };
+
+    const toggleTag = async (tag: string) => {
+        let newTags = [...selectedTags];
         if (selectedTags.includes(tag)) {
-            setSelectedTags(selectedTags.filter(t => t !== tag));
+            newTags = selectedTags.filter(t => t !== tag);
         } else if (selectedTags.length < 3) {
-            setSelectedTags([...selectedTags, tag]);
+            newTags = [...selectedTags, tag];
         } else {
-            Alert.alert('Limit Reached', 'You can only select up to 3 tags');
+            Alert.alert(t('common.tip', 'Tip'), t('setup.tags_limit', 'You can only select up to 3 tags'));
+            return;
+        }
+
+        setSelectedTags(newTags);
+
+        // Persist to DB
+        if (userId && profile) {
+            try {
+                await createUserProfile(
+                    userId,
+                    profile.displayName,
+                    newTags,
+                    profile.major,
+                    profile.avatarUrl
+                );
+            } catch (error) {
+                console.error('Failed to persist tags:', error);
+                // Rollback UI state on failure
+                setSelectedTags(selectedTags);
+            }
         }
     };
 
@@ -87,27 +177,99 @@ export default function ProfileScreen() {
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Profile</Text>
+                <Text style={styles.headerTitle}>{t('profile.title')}</Text>
             </View>
 
             {/* Profile Card */}
             <View style={styles.profileCard}>
                 <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>你</Text>
+                    {profile?.avatarUrl ? (
+                        <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} />
+                    ) : (
+                        <Text style={styles.avatarText}>{profile?.displayName?.charAt(0) || '你'}</Text>
+                    )}
                 </View>
                 <View style={styles.profileInfo}>
-                    <Text style={styles.profileName}>Demo Student</Text>
-                    <Text style={styles.profileMajor}>HKBU Student</Text>
+                    <Text style={styles.profileName}>{profile?.displayName || (loadingProfile ? '...' : 'Demo Student')}</Text>
+                    <Text style={styles.profileMajor}>{profile?.major || (loadingProfile ? '...' : 'HKBU Student')}</Text>
                 </View>
-                <TouchableOpacity style={styles.editButton}>
-                    <Edit3 size={20} color="#4B0082" />
+                <TouchableOpacity style={styles.editButton} onPress={() => router.push('/(auth)/setup')}>
+                    <Edit3 size={20} color="#1E3A8A" />
                 </TouchableOpacity>
+            </View>
+
+            {/* Innovation Lab / Agent Entry */}
+            <View style={styles.innovationSection}>
+                <View style={styles.innovationHeader}>
+                    <Sparkles size={24} color="#1E3A8A" />
+                    <Text style={styles.innovationTitle}>创新实验室 (Experimental)</Text>
+                </View>
+                <TouchableOpacity
+                    style={styles.agentButton}
+                    onPress={() => router.push('/agent/chat')}
+                >
+                    <View style={styles.agentButtonContent}>
+                        <Bot size={24} color="#fff" />
+                        <View style={styles.agentButtonText}>
+                            <Text style={styles.agentButtonTitle}>校园生活 Agent</Text>
+                            <Text style={styles.agentButtonDesc}>智能办公助手：查位子、点外卖、懂你心</Text>
+                        </View>
+                    </View>
+                    <ChevronRight size={20} color="#fff" />
+                </TouchableOpacity>
+            </View>
+
+            {/* Notifications Section */}
+            <View style={styles.section}>
+                <View style={[styles.sectionHeader, { marginBottom: 16 }]}>
+                    <View style={styles.settingLeft}>
+                        <Bell size={20} color="#1E3A8A" />
+                        <Text style={[styles.sectionTitle, { marginLeft: 12, marginBottom: 0 }]}>{t('profile.notifications')}</Text>
+                        {unreadCount > 0 && (
+                            <View style={styles.countBadgeInline}>
+                                <Text style={styles.countTextInline}>{unreadCount}</Text>
+                            </View>
+                        )}
+                    </View>
+                    <TouchableOpacity onPress={() => setShowNotifications(true)}>
+                        <Text style={styles.seeAllText}>{t('profile.see_all')}</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {loadingNotifications ? (
+                    <ActivityIndicator color="#1E3A8A" />
+                ) : notifications.length === 0 ? (
+                    <Text style={styles.emptyText}>{t('profile.no_notifications')}</Text>
+                ) : (
+                    <View style={styles.notificationPreviewList}>
+                        {notifications.slice(0, 2).map((notif) => (
+                            <TouchableOpacity
+                                key={notif.id}
+                                style={[styles.notifPreviewItem, !notif.is_read && styles.notifUnread]}
+                                onPress={() => handleNotificationPress(notif)}
+                            >
+                                <View style={[styles.notifPreviewIcon, {
+                                    backgroundColor: notif.type === 'comment' ? '#DBEAFE' :
+                                        notif.type === 'like' ? '#FEE2E2' : '#F5F3FF'
+                                }]}>
+                                    {notif.type === 'comment' ? <MessageSquare size={14} color="#2563EB" /> :
+                                        notif.type === 'like' ? <HeartIcon size={14} color="#EF4444" /> :
+                                            <Sparkles size={14} color="#8B5CF6" />}
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.notifPreviewTitle} numberOfLines={1}>{notif.title}</Text>
+                                    <Text style={styles.notifPreviewContent} numberOfLines={1}>{notif.content}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
             </View>
 
             {/* Social Tags */}
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Social Tags</Text>
-                <Text style={styles.sectionSubtitle}>Select up to 3 tags</Text>
+                <Text style={styles.sectionTitle}>{t('profile.social_tags')}</Text>
+                <Text style={styles.sectionSubtitle}>{t('profile.select_tags')}</Text>
                 <View style={styles.tagsGrid}>
                     {SOCIAL_TAGS.map((tag) => (
                         <TouchableOpacity
@@ -129,75 +291,45 @@ export default function ProfileScreen() {
                 </View>
             </View>
 
-            {/* Activity Stats */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>My Activity</Text>
-                <View style={styles.statsRow}>
-                    <View style={styles.statItem}>
-                        <Text style={styles.statValue}>12</Text>
-                        <Text style={styles.statLabel}>Posts</Text>
-                    </View>
-                    <View style={styles.statDivider} />
-                    <View style={styles.statItem}>
-                        <Text style={styles.statValue}>48</Text>
-                        <Text style={styles.statLabel}>Connections</Text>
-                    </View>
-                    <View style={styles.statDivider} />
-                    <View style={styles.statItem}>
-                        <Text style={styles.statValue}>156</Text>
-                        <Text style={styles.statLabel}>Likes</Text>
-                    </View>
-                </View>
-            </View>
 
-            {/* Ghost Mode */}
+            {/* Language Switcher */}
             <View style={styles.section}>
                 <View style={styles.settingRow}>
                     <View style={styles.settingLeft}>
-                        <Eye size={20} color="#4B0082" />
-                        <Text style={styles.settingLabel}>Ghost Mode</Text>
+                        <Globe size={20} color="#1E3A8A" />
+                        <Text style={styles.settingLabel}>{t('profile.language')}</Text>
                     </View>
-                    <Switch
-                        value={ghostMode}
-                        onValueChange={setGhostMode}
-                        trackColor={{ false: '#E5E7EB', true: '#4B0082' }}
-                        thumbColor="#fff"
-                    />
                 </View>
-                <Text style={styles.settingHint}>
-                    When enabled, you won't appear in nearby users
-                </Text>
+                <Text style={styles.settingHint}>{t('profile.language_hint')}</Text>
+                <View style={styles.langSwitcher}>
+                    {LANGUAGE_OPTIONS.map(opt => (
+                        <TouchableOpacity
+                            key={opt.key}
+                            style={[
+                                styles.langBtn,
+                                currentLang === opt.key && styles.langBtnActive
+                            ]}
+                            onPress={() => handleLanguageChange(opt.key)}
+                        >
+                            <Text style={[
+                                styles.langBtnText,
+                                currentLang === opt.key && styles.langBtnTextActive
+                            ]}>
+                                {opt.label}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
             </View>
 
             {/* Settings */}
             <View style={styles.section}>
-                <TouchableOpacity style={styles.menuItem}>
-                    <Shield size={20} color="#6B7280" />
-                    <Text style={styles.menuText}>Privacy Settings</Text>
-                    <ChevronRight size={20} color="#9CA3AF" />
-                </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => {
-                        setShowNotifications(true);
-                        // Optional: mark all as read when opening? Or per item.
-                    }}
+                    onPress={() => setShowHelp(true)}
                 >
-                    <View style={styles.menuIconWrapper}>
-                        <Bell size={20} color="#6B7280" />
-                        {unreadCount > 0 && <View style={styles.badge} />}
-                    </View>
-                    <Text style={styles.menuText}>Notifications</Text>
-                    {unreadCount > 0 && (
-                        <View style={styles.countBadge}>
-                            <Text style={styles.countText}>{unreadCount}</Text>
-                        </View>
-                    )}
-                    <ChevronRight size={20} color="#9CA3AF" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem}>
                     <HelpCircle size={20} color="#6B7280" />
-                    <Text style={styles.menuText}>Help & Support</Text>
+                    <Text style={styles.menuText}>{t('profile.help')}</Text>
                     <ChevronRight size={20} color="#9CA3AF" />
                 </TouchableOpacity>
             </View>
@@ -205,7 +337,7 @@ export default function ProfileScreen() {
             {/* Sign Out */}
             <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
                 <LogOut size={20} color="#EF4444" />
-                <Text style={styles.signOutText}>Sign Out</Text>
+                <Text style={styles.signOutText}>{t('profile.sign_out')}</Text>
             </TouchableOpacity>
 
             <View style={{ height: 100 }} />
@@ -219,7 +351,7 @@ export default function ProfileScreen() {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Notifications</Text>
+                        <Text style={styles.modalTitle}>{t('profile.notifications')}</Text>
                         <TouchableOpacity onPress={() => setShowNotifications(false)} style={styles.closeButton}>
                             <X size={24} color="#1F2937" />
                         </TouchableOpacity>
@@ -231,41 +363,37 @@ export default function ProfileScreen() {
                         contentContainerStyle={styles.notificationsList}
                         renderItem={({ item }) => (
                             <TouchableOpacity
-                                style={[styles.notificationItem, !item.read && styles.notificationUnread]}
-                                onPress={() => {
-                                    // Mark as read
-                                    setNotifications(prev => prev.map(n =>
-                                        n.id === item.id ? { ...n, read: true } : n
-                                    ));
-                                    // Navigate to post detail
-                                    setShowNotifications(false);
-                                    router.push(`/campus/${item.relatedId}` as any);
-                                }}
+                                style={[styles.notificationItem, !item.is_read && styles.notificationUnread]}
+                                onPress={() => handleNotificationPress(item)}
                             >
-                                <View style={[styles.notifIcon, { backgroundColor: item.type === 'reply' ? '#E0F2FE' : '#FEE2E2' }]}>
-                                    {item.type === 'reply' ? (
-                                        <MessageSquare size={18} color="#0284C7" />
-                                    ) : (
+                                <View style={[styles.notifIcon, {
+                                    backgroundColor: item.type === 'comment' ? '#DBEAFE' :
+                                        item.type === 'like' ? '#FEE2E2' : '#F5F3FF'
+                                }]}>
+                                    {item.type === 'comment' ? (
+                                        <MessageSquare size={18} color="#2563EB" />
+                                    ) : item.type === 'like' ? (
                                         <HeartIcon size={18} color="#EF4444" />
+                                    ) : (
+                                        <Sparkles size={18} color="#8B5CF6" />
                                     )}
                                 </View>
                                 <View style={styles.notifContent}>
-                                    <Text style={styles.notifTitle}>
-                                        <Text style={{ fontWeight: '700' }}>{item.actorName}</Text>
-                                        {item.type === 'reply' ? ' replied to you' : ' liked your post'}
-                                    </Text>
-                                    <Text style={styles.notifPreview} numberOfLines={1}>{item.contentPreview}</Text>
-                                    <Text style={styles.notifTime}>
-                                        {formatDistanceToNow(item.createdAt, { addSuffix: true })}
-                                    </Text>
+                                    <View style={styles.headerRow}>
+                                        <Text style={styles.notifTitle} numberOfLines={1}>{item.title}</Text>
+                                        <Text style={styles.notifTime}>
+                                            {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
+                                        </Text>
+                                    </View>
+                                    <Text style={styles.notifPreview} numberOfLines={2}>{item.content}</Text>
                                 </View>
-                                {!item.read && <View style={styles.dot} />}
+                                {!item.is_read && <View style={styles.dot} />}
                             </TouchableOpacity>
                         )}
                         ListEmptyComponent={
                             <View style={styles.emptyNotif}>
                                 <Bell size={48} color="#D1D5DB" />
-                                <Text style={styles.emptyNotifText}>No notifications yet</Text>
+                                <Text style={styles.emptyNotifText}>{t('profile.no_notifications_yet')}</Text>
                             </View>
                         }
                     />
@@ -273,14 +401,64 @@ export default function ProfileScreen() {
                     {notifications.length > 0 && (
                         <TouchableOpacity
                             style={styles.clearAllButton}
-                            onPress={() => {
-                                setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-                            }}
+                            onPress={handleMarkAllRead}
                         >
-                            <Text style={styles.clearAllText}>Mark all as read</Text>
+                            <Text style={styles.clearAllText}>{t('profile.mark_all_read')}</Text>
                         </TouchableOpacity>
                     )}
                 </View>
+            </Modal>
+
+            {/* Help Modal */}
+            <Modal
+                visible={showHelp}
+                animationType="fade"
+                transparent={true}
+                onRequestClose={() => setShowHelp(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowHelp(false)}
+                >
+                    <View style={styles.helpCard}>
+                        <View style={styles.helpHeader}>
+                            <HelpCircle size={32} color="#1E3A8A" />
+                            <Text style={styles.helpTitle}>{t('profile.help')}</Text>
+                        </View>
+
+                        <Text style={styles.helpContent}>{t('profile.help_contact')}</Text>
+
+                        <TouchableOpacity
+                            style={styles.emailContainer}
+                            onPress={() => handleCopyText(t('profile.help_email'))}
+                        >
+                            <View style={styles.emailContent}>
+                                <Mail size={20} color="#1E3A8A" />
+                                <Text style={styles.emailText}>{t('profile.help_email')}</Text>
+                            </View>
+                            <Copy size={18} color="#94A3B8" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.emailContainer, { marginTop: -16 }]}
+                            onPress={() => handleCopyText(t('profile.help_email_2'))}
+                        >
+                            <View style={styles.emailContent}>
+                                <Mail size={20} color="#1E3A8A" />
+                                <Text style={styles.emailText}>{t('profile.help_email_2')}</Text>
+                            </View>
+                            <Copy size={18} color="#94A3B8" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.helpCloseBtn}
+                            onPress={() => setShowHelp(false)}
+                        >
+                            <Text style={styles.helpCloseText}>{t('common.ok')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
             </Modal>
         </ScrollView>
     );
@@ -326,6 +504,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#1E3A8A',
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
     },
     avatarText: {
         color: '#fff',
@@ -355,6 +538,68 @@ const styles = StyleSheet.create({
         marginTop: 16,
         padding: 16,
         borderRadius: 16,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    seeAllText: {
+        fontSize: 14,
+        color: '#1E3A8A',
+        fontWeight: '600',
+    },
+    countBadgeInline: {
+        backgroundColor: '#EF4444',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 10,
+        marginLeft: 8,
+    },
+    countTextInline: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    notificationPreviewList: {
+        gap: 12,
+    },
+    notifPreviewItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
+    },
+    notifUnread: {
+        backgroundColor: '#EFF6FF',
+        borderColor: '#DBEAFE',
+    },
+    notifPreviewIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    notifPreviewTitle: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#111827',
+    },
+    notifPreviewContent: {
+        fontSize: 12,
+        color: '#6B7280',
+        marginTop: 1,
+    },
+    emptyText: {
+        fontSize: 14,
+        color: '#9CA3AF',
+        textAlign: 'center',
+        paddingVertical: 20,
     },
     sectionTitle: {
         fontSize: 16,
@@ -544,24 +789,29 @@ const styles = StyleSheet.create({
     },
     notifTitle: {
         fontSize: 14,
+        fontWeight: '700',
         color: '#1F2937',
-        lineHeight: 20,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
     },
     notifPreview: {
         fontSize: 13,
         color: '#6B7280',
-        marginTop: 2,
+        lineHeight: 18,
     },
     notifTime: {
         fontSize: 11,
         color: '#9CA3AF',
-        marginTop: 4,
     },
     dot: {
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: '#0284C7',
+        backgroundColor: '#1E3A8A',
         marginLeft: 8,
     },
     emptyNotif: {
@@ -585,5 +835,156 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#1E3A8A',
         fontWeight: '600',
+    },
+    langSwitcher: {
+        flexDirection: 'row',
+        backgroundColor: '#F3F4F6',
+        borderRadius: 12,
+        padding: 4,
+        marginTop: 12,
+    },
+    langBtn: {
+        flex: 1,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 10,
+    },
+    langBtnActive: {
+        backgroundColor: '#1E3A8A',
+        shadowColor: '#1E3A8A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    langBtnText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#6B7280',
+    },
+    langBtnTextActive: {
+        color: '#fff',
+    },
+    innovationSection: {
+        marginHorizontal: 16,
+        marginTop: 16,
+        padding: 16,
+        backgroundColor: '#F0F9FF',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#BAE6FD',
+    },
+    innovationHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    innovationTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#1E3A8A',
+        marginLeft: 8,
+    },
+    agentButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#1E3A8A',
+        padding: 16,
+        borderRadius: 16,
+        shadowColor: '#1E3A8A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    agentButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    agentButtonText: {
+        marginLeft: 12,
+    },
+    agentButtonTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    agentButtonDesc: {
+        fontSize: 11,
+        color: '#DBEAFE',
+        marginTop: 2,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+    },
+    helpCard: {
+        width: '100%',
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: 32,
+        alignItems: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    helpHeader: {
+        marginBottom: 24,
+        alignItems: 'center',
+    },
+    helpTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#1E293B',
+        marginTop: 12,
+    },
+    helpContent: {
+        fontSize: 16,
+        color: '#64748B',
+        textAlign: 'center',
+        lineHeight: 24,
+        marginBottom: 32,
+    },
+    emailContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#F8FAFC',
+        padding: 16,
+        borderRadius: 16,
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        marginBottom: 32,
+    },
+    emailContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    emailText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#1E3A8A',
+        marginLeft: 12,
+    },
+    helpCloseBtn: {
+        backgroundColor: '#1E3A8A',
+        paddingVertical: 14,
+        paddingHorizontal: 32,
+        borderRadius: 14,
+        width: '100%',
+        alignItems: 'center',
+    },
+    helpCloseText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });

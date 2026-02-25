@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <link rel="icon" href="/img/favicon.png" type="image/png" />
+    <title>Department of Chemistry</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://chem.hkbu.edu.hk/theme/css/bootstrap.css" />
+    <link rel="stylesheet" href="https://chem.hkbu.edu.hk/theme/css/flaticon.css" />
+    <link rel="stylesheet" href="https://chem.hkbu.edu.hk/theme/css/themify-icons.css" />
+    <link rel="stylesheet" href="https://chem.hkbu.edu.hk/theme/vendors/owl-carousel/owl.carousel.min.css" />
+    <link rel="stylesheet" href="https://chem.hkbu.edu.hk/theme/vendors/nice-select/css/nice-select.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- main css -->
+    <link rel="stylesheet" href="https://chem.hkbu.edu.hk/theme/css/style.css" />  
+    <script>
+    if ( window.location.href.match('http:') ) {
+        window.location.href = window.location.href.replace('http', 'https')
+     }
+   </script>  
+</head>
+<body>
+
+<!--================ Start Header Menu Area =================-->
+    <header class="header_area">
+      <div class="main_menu">
+        <div class="search_input" id="search_input_box">
+          <div class="container">
+            <form class="d-flex justify-content-between" action="http://www.google.com.hk/search?hl=en" method="get" id="searchForm" target="_blank">
+              <input type="text" class="form-control" name="q" id="search_input" placeholder="Search Here" />
+              <input type="hidden" name=domains value="http://chem.hkbu.edu.hk">
+				<input type="hidden" name=sitesearch value="http://chem.hkbu.edu.hk">
+				<input type="hidden" name=ie value="UTF-8">				
+              <button type="submit" class="btn">Go</button>&nbsp;&nbsp;&nbsp;
+              <span class="ti-close" id="close_search" title="Close Search"></span>
+            </form>
+          </div>
+        </div>
+
+        <nav class="navbar navbar-expand-lg navbar-light"  style="background:#fff">
+          <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <a class="navbar-brand logo_h" href="https://www.hkbu.edu.hk/eng/main/index.jsp" target="_blank"><img src="img/hkbu.png" alt="HKBU" style="width:160px;"/></a>
+			<a class="navbar-brand logo_h" href="https://70.hkbu.edu.hk/en.html" target="_blank"><img src="img/70A-logo.png" alt="HKBU-70A" style="width:60px;"/></a>	
+			<a class="navbar-brand logo_h" href="/"><img src="img/logo3.png" alt="Chemistry" style="width:120px;"/></a>			
+            <button
+              class="navbar-toggler"
+              type="button"
+              data-toggle="collapse"
+              data-target="#navbarSupportedContent"
+              aria-controls="navbarSupportedContent"
+              aria-expanded="false"
+              aria-label="Toggle navigation"
+            >
+              <span class="icon-bar"></span> <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse offset" id="navbarSupportedContent">
+              <ul class="nav navbar-nav menu_nav ml-auto">
+                <li class="nav-item active">
+                  <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item submenu dropdown">
+                  <a href="#" id="id-research-dwon" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" >Research</a>
+                  <ul class="dropdown-menu">
+                    <li class="nav-item" style="width:260px;">
+                      <a class="nav-link" href="/research/analytical_science">Analytical Science</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="/research/chemical_biology">Chemical Biology</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="/research/drug_discovery">Drug Discovery</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="/research/advanced_materials">Advanced Materials</a>
+                    </li> 
+                    <li class="nav-item">
+                      <a class="nav-link" href="/research/research_facilities">Research Facilities</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item submenu dropdown">
+                  <a href="#" id="id-people-dwon" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" >People</a>
+                  <ul class="dropdown-menu">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/people/faculty">Faculty</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="/people/support_staff">Support Staff</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item submenu dropdown">
+                  <a href="#" id="id-programmes-dwon" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" >Programmes</a>
+                  <ul class="dropdown-menu">
+                    <li class="nav-item" style="width:260px;">
+                       <a class="nav-link" href="/bsc_ats_chem" style="line-height: 1.8;">Undergraduate AY2023-24 and Before</a>
+                    </li>
+                    <li class="nav-item">
+                       <a class="nav-link" href="/bsc_bts" style="line-height: 1.8;">Undergraduate AY2024-25 and Thereafter</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="/msc" style="line-height: 1.8;">Taught Postgraduate for MSc</a>
+                    </li>
+                    <li class="nav-item">
+                       <a class="nav-link" href="/rpg" style="line-height: 1.8;">Research Postgraduate for MPhil/PhD</a>
+                    </li>
+                  </ul>
+                </li>
+				
+				<li class="nav-item active">
+                  <a class="nav-link" href="/dailylife">Chemistry in Daily Life</a>
+                </li>
+
+				
+                <li class="nav-item submenu dropdown">
+                <a href="#" id="id-programmes-dwon" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" >About</a>
+                  <ul class="dropdown-menu">
+                  <li class="nav-item">
+                       <a class="nav-link" href="/about">About Us</a>
+                    </li>
+                    <li class="nav-item" style="width:260px;">
+                       <a class="nav-link" href="/news">News and Events</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="/outreach">Outreach</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="/anchemch">Analytical Chemistry Challenge for Secondary Students</a>
+                    </li>
+					<!--
+					<li class="nav-item">
+                      <a class="nav-link" href="/dailylife">Chemistry in Daily Life</a>
+                    </li>
+					-->
+					
+                    <li class="nav-item">
+                       <a class="nav-link" href="/giving">Giving</a>
+                    </li>
+                    <li class="nav-item">
+                       <a class="nav-link" href="/contact">Contact Us</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="nav-item">
+                  <a href="#" class="nav-link search" id="search">
+                    <i class="ti-search"></i>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <!--================ End Header Menu Area =================-->
+<!-- div>
+      <div class="container" >
+        <div class="row justify-content-center">
+        <img src="/img/dept_of_chemistry.png" alt="" style="width:400px;margin-top:80px;padding:4px 0;" />
+</div></div></div-->
+
+
+    <!--================ Start Home Banner Area =================-->
+    <!--================ End Home Banner Area =================-->
+    <style>
+.designation {min-height:50px;}
+.single-trainer .meta-text a{color:#777;}
+</style>
+
+    
+	    <!--================ Start Department Area =================-->
+    <section class="trainer_area" id="id-department-area">
+      <div class="container">
+        <!--
+		<div class="row justify-content-center">
+          <div class="col-lg-5">
+            <div class="main_title">
+              <h2 class="mb-3">OUR DEPARTMENT</h2>
+            </div>
+          </div>
+        </div>
+		-->
+		<br><br><br>
+        <div class="row justify-content-center d-flex align-items-center">
+          <div class="col-lg-12 col-md-12 col-sm-12 single-trainer">
+            <div class="thumb d-flex justify-content-sm-center">
+             <video
+				width="100%"
+				controls
+				loop
+				src="https://chem.hkbu.edu.hk/video/video.mp4"
+				poster="https://chem.hkbu.edu.hk/video/poster2.png"
+			>		
+			</video>
+			<h2 class="mb-3">           </h2>
+            </div>
+	<br>
+	<!--================ Start News Area =================-->
+
+    <div class="events_area">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-5">
+            <div class="main_title">
+              <h2 class="mb-3 text-white">News and Events</h2>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+                	<div class="col-lg-6 col-md-6">
+            <div class="single_event position-relative">
+              <div class="event_thumb">
+                <img src="https://chem.hkbu.edu.hk/upload/1769651814956.jpg" alt="" />
+              </div>
+              <div class="event_details">
+                <div class="d-flex mb-4">
+                  <div class="date">&nbsp;</div>
+
+                  <div class="time-location">
+                    <p>
+                      <span class="ti-time mr-2"></span> 2026-01-12                    </p>
+                  </div>
+                </div>
+                <p>
+                  CHEM Open Sem Gathering                </p>
+                <a href="/news/single_news/182" class="primary-btn rounded-0 mt-3">View Details</a>
+              </div>
+            </div>
+          </div>
+                	<div class="col-lg-6 col-md-6">
+            <div class="single_event position-relative">
+              <div class="event_thumb">
+                <img src="https://chem.hkbu.edu.hk/upload/1758167520301.jpg" alt="" />
+              </div>
+              <div class="event_details">
+                <div class="d-flex mb-4">
+                  <div class="date">&nbsp;</div>
+
+                  <div class="time-location">
+                    <p>
+                      <span class="ti-time mr-2"></span> 2025-09-02                    </p>
+                  </div>
+                </div>
+                <p>
+                  UG Programme Orientation (AY 2025-2026)                </p>
+                <a href="/news/single_news/171" class="primary-btn rounded-0 mt-3">View Details</a>
+              </div>
+            </div>
+          </div>
+                  <div class="col-lg-6 col-md-6" style="display:none">
+            <div class="single_event position-relative">
+              <div class="event_thumb">
+                <img src="img/event/e1.jpg" alt="" />
+              </div>
+              <div class="event_details">
+                <div class="d-flex mb-6">
+                  <div class="date"><span>15</span> Jun</div>
+
+                  <div class="time-location">
+                    <p>
+                      <span class="ti-time mr-2"></span> 12:00 AM - 12:30 AM
+                    </p>
+                    <p>
+                      <span class="ti-location-pin mr-2"></span> Hilton Quebec
+                    </p>
+                  </div>
+                </div>
+                <p>
+                  One make creepeth man for so bearing their firmament won't
+                  fowl meat over seas great
+                </p>
+                <a href="#" class="primary-btn rounded-0 mt-3">View Details</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 col-md-6" style="display:none">
+            <div class="single_event position-relative">
+              <div class="event_thumb">
+                <img src="img/event/e2.jpg" alt="" />
+              </div>
+              <div class="event_details">
+                <div class="d-flex mb-4">
+                  <div class="date"><span>15</span> Jun</div>
+
+                  <div class="time-location">
+                    <p>
+                      <span class="ti-time mr-2"></span> 12:00 AM - 12:30 AM
+                    </p>
+                    <p>
+                      <span class="ti-location-pin mr-2"></span> Hilton Quebec
+                    </p>
+                  </div>
+                </div>
+                <p>
+                  One make creepeth man for so bearing their firmament won't
+                  fowl meat over seas great
+                </p>
+                <a href="#" class="primary-btn rounded-0 mt-3">View Details</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 col-md-6" style="display:none">
+            <div class="single_event position-relative">
+              <div class="event_thumb">
+                <img src="img/event/e2.jpg" alt="" />
+              </div>
+              <div class="event_details">
+                <div class="d-flex mb-4">
+                  <div class="date"><span>15</span> Jun</div>
+
+                  <div class="time-location">
+                    <p>
+                      <span class="ti-time mr-2"></span> 12:00 AM - 12:30 AM
+                    </p>
+                    <p>
+                      <span class="ti-location-pin mr-2"></span> Hilton Quebec
+                    </p>
+                  </div>
+                </div>
+                <p>
+                  One make creepeth man for so bearing their firmament won't
+                  fowl meat over seas great
+                </p>
+                <a href="#" class="primary-btn rounded-0 mt-3">View Details</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-12">
+            <div class="text-center pt-lg-5 pt-3">
+              <a href="/news" class="event-link">
+                View All News <img src="img/next.png" alt="" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--================ End News Area =================-->
+
+<!--================ Start Research Area =================-->
+    <section class="feature_area section_gap_top" id="id-research-area">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-5">
+            <div class="main_title">
+              <h2 class="mb-3">Research</h2>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-3 col-md-6">
+            <div class="single_feature">
+              <div class="icon"><a href="/research/analytical_science"><img class="img-fluid" src="/img/home/a_sci.jpg" alt=""/></a></div>
+              <div class="desc">
+                <h4 class="mt-3 mb-2 text-sm-center">Analytical Science</h4>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <div class="single_feature">
+              <div class="icon"><a href="/research/chemical_biology"><img class="img-fluid" src="/img/home/chem_b.jpg" alt=""/></a></div>
+              <div class="desc">
+                <h4 class="mt-3 mb-2 text-sm-center">Chemical Biology</h4>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <div class="single_feature">
+              <div class="icon"><a href="/research/drug_discovery"><img class="img-fluid" src="/img/home/drug_d.jpg" alt=""/></a></div>
+              <div class="desc">
+                <h4 class="mt-3 mb-2 text-sm-center">Drug Discovery</h4>
+                 </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-3 col-md-6">
+            <div class="single_feature">
+              <div class="icon"><a href="/research/advanced_materials"><img class="img-fluid" src="/img/home/ad_m.jpg" alt=""/></a></div>
+              <div class="desc">
+                <h4 class="mt-3 mb-2 text-sm-center">Advanced Materials</h4>
+              </div>
+            </div>
+          </div>          
+          
+        </div>
+      </div>
+    </section>
+    <!--================ End Research Area =================-->
+    
+    <!--================ Start Course Area =================-->
+    <section class="trainer_area" id="id-programmes-area">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-5">
+            <div class="main_title">
+              <h2 class="mb-3">Programmes</h2>
+            </div>
+          </div>
+        </div>
+        <div class="row justify-content-center d-flex align-items-center">
+          
+          <div class="col-lg-3 col-md-6 col-sm-12 single-trainer">
+            <div class="thumb d-flex justify-content-sm-center">
+            <a href="/programmes/bsc_ats_chem"><img class="img-fluid" src="/img/programmes/p1.jpg" alt="" /></a>
+            </div>
+            <div class="meta-text text-sm-center">            
+              <h4>Undergraduate</h4>
+              <p class="designation"><a href="/programmes/bsc_ats_chem">AY2023-24 and Before</a></p>              
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6 col-sm-12 single-trainer">
+            <div class="thumb d-flex justify-content-sm-center">
+              <a href="/programmes/bsc_bts"><img class="img-fluid" src="/img/programmes/p2.jpg" alt="" /></a>
+            </div>
+            <div class="meta-text text-sm-center">
+              <h4>Undergraduate</h4>
+              <p class="designation"><a href="/programmes/bsc_bts">AY2024-25 and Thereafter</a></p>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6 col-sm-12 single-trainer">
+            <div class="thumb d-flex justify-content-sm-center">
+              <a href="/programmes/msc"><img class="img-fluid" src="/img/programmes/p4.jpg" alt="" /></a>
+            </div>
+            <div class="meta-text text-sm-center">
+              <h4>Postgraduate</h4>
+              <p class="designation"><a href="/programmes/msc">MSc in Analytical Chemistry</a></p>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6 col-sm-12 single-trainer">
+            <div class="thumb d-flex justify-content-sm-center">
+              <a href="/programmes/rpg"><img class="img-fluid" src="/img/programmes/p3.jpg" alt="" /></a>
+            </div>
+            <div class="meta-text text-sm-center">
+              <h4>Postgraduate</h4>
+              <p class="designation"><a href="/programmes/rpg">MPhil / PhD</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!--================ End Course Area =================-->
+    
+    
+    <!--================ Start Faculty Area =================-->
+    <section class="trainer_area" id="id-faculty-area">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-5">
+            <div class="main_title">
+              <h2 class="mb-3">Faculty</h2>
+              <!--p>Replenish man have thing gathering lights yielding shall you</p-->
+            </div>
+          </div>
+        </div>
+        <div class="row justify-content-center d-flex align-items-center">
+          <div class="col-lg-12 col-md-12 col-sm-12 single-trainer">
+            <div class="thumb d-flex justify-content-sm-center">
+              <a href="/people/faculty"><img class="img-fluid" src="img/home/faculty20230616.jpg" alt="" /></a>
+            </div>
+
+<!--            
+            <div class="meta-text text-sm-center">            
+              <h4>HHHHH HHHHH HHHHH</h4>
+              <p class="designation">ddddddddd dddddddddd ddddddddddd dddddddd</p>              
+              <div class="mb-4">
+                <p>If you are looking at blank cassettes on the web.</p>
+              </div>
+              <div class="align-items-center justify-content-center d-flex">
+                <a href="#"><i class="ti-facebook"></i></a>
+                <a href="#"><i class="ti-twitter"></i></a>
+                <a href="#"><i class="ti-linkedin"></i></a>
+                <a href="#"><i class="ti-pinterest"></i></a>
+              </div>
+            </div>
+-->            
+            
+          </div>
+
+          
+
+          
+        </div>
+      </div>
+    </section>
+    <!--================ End Faculty Area =================-->
+	
+    <!--================ Start Chemistry in Daily Life =================-->
+    <div class="popular_courses section_gap_top">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-5">
+            <div class="main_title">
+              <h2 class="mb-3">Chemistry in Daily Life</h2>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <!-- single course -->
+          <div class="col-lg-12">
+            <div class="owl-carousel active_course">
+              <!--
+			  <div class="single_course">
+                <div class="course_head">
+                  <img class="img-fluid" src="img/daily_life/dl1.jpg" alt="" />
+                </div>
+                <div class="course_content">
+                  <span class="tag mb-4 d-inline-block">Food</span>
+                  <h4 class="mb-3">
+                    <a href="/dailylife">Details</a>
+                  </h4>
+                </div>
+              </div>
+			  -->
+
+              <div class="single_course">
+                <div class="course_head">
+                  <img class="img-fluid" src="img/daily_life/dl2-r.jpg" alt="" />
+                </div>
+                <div class="course_content">
+                  <span class="tag mb-4 d-inline-block">Cosmetic</span>
+                  <h4 class="mb-3">
+                    <a href="/dailylife/perfume" target="_blank">Details</a>
+                  </h4>
+                </div>
+              </div>
+
+              <div class="single_course">
+                <div class="course_head">
+                  <img class="img-fluid" src="img/daily_life/dl3-r.jpg" alt="" />
+                </div>
+                <div class="course_content">
+                  <span class="tag mb-4 d-inline-block">Cosmetic</span>
+                  <h4 class="mb-3">
+                    <a href="/dailylife/perfume2" target="_blank">Details</a>
+                  </h4>
+                </div>
+              </div>
+
+               <div class="single_course">
+                <div class="course_head">
+                  <img class="img-fluid" src="img/daily_life/dl4-r.jpg" alt="" />
+                </div>
+                <div class="course_content">
+                  <span class="tag mb-4 d-inline-block">Energy</span>
+                  <h4 class="mb-3">
+                    <a href="/dailylife/renew_energy" target="_blank">Details</a>
+                  </h4>
+                </div>
+              </div>
+
+               <div class="single_course">
+                <div class="course_head">
+                  <img class="img-fluid" src="img/daily_life/dl5-r.jpg" alt="" />
+                </div>
+                <div class="course_content">
+                  <span class="tag mb-4 d-inline-block">Nutrition</span>
+                  <h4 class="mb-3">
+                    <a href="/dailylife/scurvy" target="_blank">Details</a>
+                  </h4>
+                </div>
+              </div>
+
+               <div class="single_course">
+                <div class="course_head">
+                  <img class="img-fluid" src="img/daily_life/dl6.jpg" alt="" />
+                </div>
+                <div class="course_content">
+                  <span class="tag mb-4 d-inline-block">Food</span>
+                  <h4 class="mb-3">
+                    <a href="/dailylife/gelatinization" target="_blank">Details</a>
+                  </h4>
+                </div>
+              </div>
+
+               <div class="single_course">
+                <div class="course_head">
+                  <img class="img-fluid" src="img/daily_life/dl7.jpg" alt="" />
+                </div>
+                <div class="course_content">
+                  <span class="tag mb-4 d-inline-block">Food</span>
+                  <h4 class="mb-3">
+                    <a href="/dailylife/tenderizer" target="_blank">Details</a>
+                  </h4>
+                </div>
+              </div>
+
+               <div class="single_course">
+                <div class="course_head">
+                  <img class="img-fluid" src="img/daily_life/dl8.jpg" alt="" />
+                </div>
+                <div class="course_content">
+                  <span class="tag mb-4 d-inline-block">Nutrition</span>
+                  <h4 class="mb-3">
+                    <a href="/dailylife/omega" target="_blank">Details</a>
+                  </h4>
+                </div>
+              </div>
+ 
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--================ End Chemistry in Daily Life =================-->
+	
+	
+	  <!--================ Start Events Area =================-->
+	<!--  
+    <div class="testimonial_area section_gap">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-5">
+            <div class="main_title">
+              <h2 class="mb-3">Events</h2>
+              <p>                
+				<a href="/events">View Recent Events</a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="testi_slider owl-carousel">
+     -->     
+    <!--    
+		          <div class="testi_item">
+              <div class="row">
+                <div class="col-lg-4 col-md-6"  style="text-align: center;"><i class="fa fa-users" style="font-size:100px;color:#00529b"></i><br><p>Seminar</p></div>
+                <div class="col-lg-8">
+                  <div class="testi_text">
+                  	<h4>
+                  	<i class="fa fa-calendar" aria-hidden="true"></i> 2022-08-17 
+                  	<br>
+                  	<i class="fa fa-clock-o" aria-hidden="true"></i> 11:00                  	</h4>                     
+                    <p>Chemosensing and Biological Studies of Rhodamine Derivatives and Their Hybrids with Transition Metal Complexes</p>
+                    <p>&nbsp;</p>
+                    <p>Speaker: Prof. Keith Man-Chung Wong</p>
+                    <p>&nbsp;</p>
+                    <p>Venue: RRS 905</p>                    
+                  </div>
+                </div>
+              </div>
+            </div>
+                     <div class="testi_item">
+              <div class="row">
+                <div class="col-lg-4 col-md-6"  style="text-align: center;"><i class="fa fa-users" style="font-size:100px;color:#00529b"></i><br><p>Seminar</p></div>
+                <div class="col-lg-8">
+                  <div class="testi_text">
+                  	<h4>
+                  	<i class="fa fa-calendar" aria-hidden="true"></i> 2022-08-05 
+                  	<br>
+                  	<i class="fa fa-clock-o" aria-hidden="true"></i> 14:00                  	</h4>                     
+                    <p>Electrocatalytic Films: from Nanodiffusion to Functional Electrocatalysts</p>
+                    <p>&nbsp;</p>
+                    <p>Speaker: Prof. Cédric Tard</p>
+                    <p>&nbsp;</p>
+                    <p>Venue: RRS 905</p>                    
+                  </div>
+                </div>
+              </div>
+            </div>
+                     <div class="testi_item">
+              <div class="row">
+                <div class="col-lg-4 col-md-6"  style="text-align: center;"><i class="fa fa-users" style="font-size:100px;color:#00529b"></i><br><p>Seminar</p></div>
+                <div class="col-lg-8">
+                  <div class="testi_text">
+                  	<h4>
+                  	<i class="fa fa-calendar" aria-hidden="true"></i> 2021-12-22 
+                  	<br>
+                  	<i class="fa fa-clock-o" aria-hidden="true"></i> 14:30                  	</h4>                     
+                    <p>SPEAR vs SHIELD: SARS-CoV-2 and Polymerase Inhibitors</p>
+                    <p>&nbsp;</p>
+                    <p>Speaker: Prof. Rao Zihe</p>
+                    <p>&nbsp;</p>
+                    <p>Venue: OEE1017&Zoom:971 8539 9267</p>                    
+                  </div>
+                </div>
+              </div>
+            </div>
+                     <div class="testi_item">
+              <div class="row">
+                <div class="col-lg-4 col-md-6"  style="text-align: center;"><i class="fa fa-users" style="font-size:100px;color:#00529b"></i><br><p>Seminar</p></div>
+                <div class="col-lg-8">
+                  <div class="testi_text">
+                  	<h4>
+                  	<i class="fa fa-calendar" aria-hidden="true"></i> 2021-06-04 
+                  	<br>
+                  	<i class="fa fa-clock-o" aria-hidden="true"></i> 14:00                  	</h4>                     
+                    <p>Advanced Mass Spectrometry in Biomarker Discovery for Emerging Contaminants</p>
+                    <p>&nbsp;</p>
+                    <p>Speaker: Prof. Adrian COVACI</p>
+                    <p>&nbsp;</p>
+                    <p>Venue: Zoom Meeting ID: 964 3065 0933</p>                    
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+		 -->  
+		   
+            
+           <!--
+          
+            <div class="testi_item">
+              <div class="row">
+                <div class="col-lg-4 col-md-6">
+                  <img src="img/testimonials/t1.jpg" alt="" />
+                </div>
+                <div class="col-lg-8">
+                  <div class="testi_text">
+                    <h4>1. 2019-06-17</h4>
+                    <p>Prof. Diana S. Aga - Informal Discussion with research postgraduate students</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            
+            
+            <div class="testi_item">
+              <div class="row">
+                <div class="col-lg-4 col-md-6">
+                  <img src="img/testimonials/t2.jpg" alt="" />
+                </div>
+                <div class="col-lg-8">
+                  <div class="testi_text">
+                    <h4>2. 2019-06-18</h4>
+                    <p>Lessons Learned from Two Decades of Research on Uncovering Emerging Contaminants</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="testi_item">
+              <div class="row">
+                <div class="col-lg-4 col-md-6">
+                  <img src="img/testimonials/t1.jpg" alt="" />
+                </div>
+                <div class="col-lg-8">
+                  <div class="testi_text">
+                    <h4>3. 2019-06-19</h4>
+                    <p>Hydrogenase biomimics: Role of 4 billion year old organometallic enzymes in the H2 economy</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="testi_item">
+              <div class="row">
+                <div class="col-lg-4 col-md-6">
+                  <img src="img/testimonials/t2.jpg" alt="" />
+                </div>
+                <div class="col-lg-8">
+                  <div class="testi_text">
+                    <h4>4. 2019-06-20</h4>
+                    <p>Catalysts for asymmetric reduction</div>
+                </div>
+              </div>
+            </div>-->
+<!-- 
+            <div class="testi_item">
+              <div class="row">
+                <div class="col-lg-4 col-md-6">
+                  <img src="img/testimonials/t1.jpg" alt="" />
+                </div>
+                <div class="col-lg-8">
+                  <div class="testi_text">
+                    <h4>5. 2019-06-21</h4>
+                    <p>
+                      Him, made can't called over won't there on divide there
+                      male fish beast own his day third seed sixth seas unto.
+                      Saw from
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="testi_item">
+              <div class="row">
+                <div class="col-lg-4 col-md-6">
+                  <img src="img/testimonials/t2.jpg" alt="" />
+                </div>
+                <div class="col-lg-8">
+                  <div class="testi_text">
+                    <h4>6. 2019-06-22</h4>
+                    <p>
+                      Him, made can't called over won't there on divide there
+                      male fish beast own his day third seed sixth seas unto.
+                      Saw from
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--================ End Events Area =================-->
+  
+
+<style>
+.single-footer-widget ul li{float:left;display:block; padding-right:30px;}
+
+/*.footer-area{
+    background-image: url("/theme/img/banner/banner.jpg");
+    background-position: left 95%;
+    background-repeat: no-repeat;
+    height: 28px;
+    text-indent: -9999px;
+        filter:alpha(opacity=50);
+         opacity:0.5;
+}*/
+
+</style>
+<!--================ Start footer Area  =================-->
+    <footer class="footer-area section_gap">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12 col-md-12 single-footer-widget">
+          <h4>Quick Links</h4>
+            <ul>
+              <li><a href="https://www.facebook.com/baptistchemists/" target="_blank">Alumni</a></li>
+              <li><a href="/contact">Contact</a></li>
+			  <li><a href="https://bupdpo.hkbu.edu.hk/policies-and-procedures/pps-pics/" target="_blank">Privacy Policy</a></li>
+			  <li><a href="https://www.hkbu.edu.hk/en/disclaimer.html" target="_blank">Disclaimer</a></li>	  
+			  <!--
+              <li><a href="/sitemap">Site Map</a></li>
+			  -->
+              <li><a href="https://www.facebook.com/hkbu.chemistry" target="_blank"><img src="/img/icons/fb.png"/></a></li>
+              <li><a href="https://www.instagram.com/hkbuchem/" target="_blank"><img src="/img/icons/ig.png"/></a></li>
+               <li><a href="https://www.xiaohongshu.com/user/profile/657928e0000000001902f504" target="_blank"><img src="/img/icons/xhs.png"/></a></li>
+             <!-- li><a href="https://drive.google.com/drive/folders/1qyS7Fr6Q67LwxBmEDglcXI5krvbmA6OZ?usp=sharing" target="_blank">Shared with Staff</a></li-->
+            </ul>
+          </div>
+          <!-- 
+          <div class="col-lg-2 col-md-6 single-footer-widget">
+            <ul>
+              <li><a href="#">Alumni</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-6 single-footer-widget">
+            <ul>
+              <li><a href="#">Contact</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-6 single-footer-widget">
+            <ul>
+              <li><a href="#">Site Map</a></li>
+            </ul>
+          </div>
+          --> <!-- 
+          <div class="col-lg-4 col-md-6 single-footer-widget">
+          	&nbsp;
+           
+            <h4>Newsletter</h4>
+            <p>You can trust us. we only send promo offers,</p>
+            <div class="form-wrap" id="mc_embed_signup">
+              <form target="_blank" action="https://spondonit.us12.list-manage.com/subscribe/post?u=1462626880ade1ac87bd9c93a&amp;id=92a4423d01" method="get" class="form-inline">
+                <input class="form-control" name="EMAIL" placeholder="Your Email Address" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Your Email Address'" required="" type="email" />
+                <button class="click-btn btn btn-default">
+                  <span>subscribe</span>
+                </button>
+                <div style="position: absolute; left: -5000px;">
+                  <input name="b_36c4fd991d266f23781ded980_aefe40901a" tabindex="-1" value="" type="text" />
+                </div>
+                <div class="info"></div>
+              </form>
+            </div>
+            
+            
+            
+          </div>-->
+        </div>
+        <div class="row footer-bottom d-flex justify-content-between">
+          <p class="col-lg-12 col-sm-12 footer-text m-0 text-white">
+Room RRS806, Sir Run Run Shaw Building, Ho Sin Hang Campus, <a href="https://www.hkbu.edu.hk/eng/main/index.jsp" target="_blank">HKBU</a>
+          </p>
+          <!--div class="col-lg-4 col-sm-12 footer-social">
+            <a href="#"><i class="ti-facebook"></i></a>
+            <a href="#"><i class="ti-twitter"></i></a>
+            <a href="#"><i class="ti-dribbble"></i></a>
+            <a href="#"><i class="ti-linkedin"></i></a>
+          </div-->
+        </div>
+      </div>
+    </footer>
+   
+    <!--================ End footer Area  =================-->
+   <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://chem.hkbu.edu.hk/theme/js/jquery-3.2.1.min.js"></script>
+    <script src="https://chem.hkbu.edu.hk/theme/js/popper.js"></script>
+    <script src="https://chem.hkbu.edu.hk/theme/js/bootstrap.min.js"></script>
+    <script src="https://chem.hkbu.edu.hk/theme/vendors/nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="https://chem.hkbu.edu.hk/theme/vendors/owl-carousel/owl.carousel.min.js"></script>
+    <script src="https://chem.hkbu.edu.hk/theme/js/owl-carousel-thumb.min.js"></script>
+    <script src="https://chem.hkbu.edu.hk/theme/js/jquery.ajaxchimp.min.js"></script>
+    <script src="https://chem.hkbu.edu.hk/theme/js/mail-script.js"></script>
+    <!--gmaps Js-->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjCGmQ0Uq4exrzdcL6rvxywDDOvfAu6eE"></script>
+    <script src="https://chem.hkbu.edu.hk/theme/js/gmaps.min.js"></script>
+    <script src="https://chem.hkbu.edu.hk/theme/js/theme.js"></script> 
+    <script>
+    $(document).ready(function() {
+    	$("#id-people-dwon").click(function() {
+    	     $('html, body').animate({
+    	         scrollTop: $("#id-faculty-area").offset().top - 90
+    	     }, 1500);
+    	 });
+
+    	$("#id-programmes-dwon").click(function() {
+       	     $('html, body').animate({
+       	         scrollTop: $("#id-programmes-area").offset().top - 90
+       	     }, 1500);
+    	});
+
+   	  	$("#id-research-dwon").click(function() {
+    	     $('html, body').animate({
+    	         scrollTop: $("#id-research-area").offset().top
+    	     }, 1500);
+   	 	});
+	});
+    </script>
+
+</body>
+</html>
+  
