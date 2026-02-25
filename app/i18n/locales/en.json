@@ -179,6 +179,8 @@
         "otp_failed": "Failed to send OTP",
         "otp_invalid": "Invalid or expired OTP",
         "password_too_short": "Password too short (min 6 chars)",
+        "send_success": "Sent",
+        "send_msg": "Verification code sent to your email",
         "resend_success": "Resent",
         "resend_msg": "New OTP sent to your email",
         "resend_action": "Didn't receive? Resend",
@@ -201,7 +203,8 @@
         "forgot_password_title": "Reset Password",
         "forgot_password_subtitle": "Verify email to set a new password",
         "reset_password_btn": "Reset Password",
-        "reset_success_msg": "Password reset successful, please login"
+        "reset_success_msg": "Password reset successful, please login",
+        "password_same_as_old": "New password cannot be the same as the old password. Please set a different password"
     },
     "setup": {
         "title": "Who are you?",

@@ -20,7 +20,7 @@ export const APP_CONFIG = {
     demoCredentials: {
         email: 'demo@life.hkbu.edu.hk',
         password: 'demodemo',
-        uid: 'demo-user-id-999',
+        uid: '3b3acb79-5086-47c2-a16d-9e4943c65a89',
     },
 
     // --- Feature Toggles ---

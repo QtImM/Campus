@@ -69,8 +69,13 @@ export default function RegisterScreen() {
         try {
             await sendOTP(fullEmail);
             setCountdown(60);
+            const isResend = isOtpSent;
             setIsOtpSent(true);
-            Alert.alert(t('auth.resend_success', 'Sent'), t('auth.resend_msg', 'Verification code has been sent to your email'));
+            if (isResend) {
+                Alert.alert(t('auth.resend_success', '已重发'), t('auth.resend_msg', '验证码已重新发送到您的邮箱'));
+            } else {
+                Alert.alert(t('auth.send_success', '已发送'), t('auth.send_msg', '验证码已发送到您的邮箱'));
+            }
         } catch (error: any) {
             Alert.alert(t('common.error', 'Error'), error.message || t('auth.otp_failed', 'Failed to send verification code'));
         } finally {
@@ -275,7 +280,7 @@ export default function RegisterScreen() {
 
                     <View style={styles.footer}>
                         <Text style={styles.footerText}>{t('auth.go_to_login_prefix', 'Already have an account?')}</Text>
-                        <TouchableOpacity onPress={() => router.push('/login')}>
+                        <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
                             <Text style={styles.link}>{t('auth.go_to_login_link', 'Log In')}</Text>
                         </TouchableOpacity>
                     </View>

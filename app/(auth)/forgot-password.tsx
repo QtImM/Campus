@@ -3,7 +3,7 @@ import { ArrowLeft, ChevronDown, Eye, EyeOff, Globe, Key } from 'lucide-react-na
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { sendOTP, updatePassword, verifyOTP } from '../../services/auth';
+import { sendOTP, signIn, signOut, updatePassword, verifyOTP } from '../../services/auth';
 import { changeLanguage } from '../i18n/i18n';
 
 const DOMAINS = [
@@ -66,8 +66,13 @@ export default function ForgotPasswordScreen() {
         try {
             await sendOTP(fullEmail);
             setCountdown(60);
+            const isResend = isOtpSent;
             setIsOtpSent(true);
-            Alert.alert(t('auth.resend_success', 'Sent'), t('auth.resend_msg', 'Verification code has been sent to your email'));
+            if (isResend) {
+                Alert.alert(t('auth.resend_success', '已重发'), t('auth.resend_msg', '验证码已重新发送到您的邮箱'));
+            } else {
+                Alert.alert(t('auth.send_success', '已发送'), t('auth.send_msg', '验证码已发送到您的邮箱'));
+            }
         } catch (error: any) {
             Alert.alert(t('common.error', 'Error'), error.message || t('auth.otp_failed', 'Failed to send verification code'));
         } finally {
@@ -97,13 +102,31 @@ export default function ForgotPasswordScreen() {
 
         setLoading(true);
         try {
+            // 1. 先检查新密码是否与旧密码相同（在验证 OTP 之前）
+            try {
+                await signIn(fullEmail, password);
+                // 如果登录成功，说明新密码与旧密码相同
+                await signOut();
+                setLoading(false);
+                Alert.alert(
+                    t('common.tip', '提示'), 
+                    t('auth.password_same_as_old', '新密码不能与旧密码相同，请设置一个新的密码')
+                );
+                return;
+            } catch (loginError: any) {
+                // 登录失败说明新密码与旧密码不同，可以继续
+                console.log('Password is different, proceeding with OTP verification');
+            }
+
+            // 2. 验证 OTP
             const user = await verifyOTP(fullEmail, otp);
             if (!user) throw new Error('Verification failed');
 
+            // 3. 执行密码重置
             await updatePassword(password);
 
             Alert.alert(t('common.tip', 'Success'), t('auth.reset_success_msg', 'Password reset successful, please login'), [
-                { text: 'OK', onPress: () => router.replace('/login') }
+                { text: 'OK', onPress: () => router.replace('/(auth)/login') }
             ]);
         } catch (error: any) {
             Alert.alert(t('common.error', 'Error'), error.message || t('auth.register_failed', 'Reset failed'));

@@ -179,6 +179,8 @@
         "otp_failed": "發送驗證碼失敗",
         "otp_invalid": "驗證碼無效或已過期",
         "password_too_short": "密碼長度不能少於6位",
+        "send_success": "已發送",
+        "send_msg": "驗證碼已發送至您的郵箱",
         "resend_success": "已重發",
         "resend_msg": "新的驗證碼已發送至您的郵箱",
         "resend_action": "沒收到？點擊重發",
@@ -201,7 +203,8 @@
         "forgot_password_title": "重置密碼",
         "forgot_password_subtitle": "驗證郵箱以設置新密碼",
         "reset_password_btn": "重置密碼",
-        "reset_success_msg": "密碼重置成功，請登錄"
+        "reset_success_msg": "密碼重置成功，請登錄",
+        "password_same_as_old": "新密碼不能與舊密碼相同，請設置一個新的密碼"
     },
     "setup": {
         "title": "你是誰？",
