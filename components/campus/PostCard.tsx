@@ -37,6 +37,12 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({ post, onLike, onC
     const timeAgo = formatDistanceToNow(post.createdAt, { addSuffix: true });
     const pressed = useSharedValue(1);
 
+    // Helper to check if avatar URL is valid (not a local file path)
+    const isValidAvatarUrl = (url?: string) => {
+        if (!url) return false;
+        return url.startsWith('http://') || url.startsWith('https://');
+    };
+
     const categoryColors: Record<string, string> = {
         'Events': '#FF6B6B',
         'Reviews': '#4ECDC4',
@@ -168,7 +174,7 @@ export const PostCard: React.FC<PostCardProps> = React.memo(({ post, onLike, onC
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.avatar}>
-                        {!post.isAnonymous && post.authorAvatar ? (
+                        {!post.isAnonymous && isValidAvatarUrl(post.authorAvatar) ? (
                             <Image source={{ uri: post.authorAvatar }} style={styles.avatarImage} />
                         ) : (
                             <Text style={styles.avatarText}>

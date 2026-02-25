@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { decode } from 'base64-arraybuffer';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { APP_CONFIG } from '../constants/Config';
 import { User } from '../types';
@@ -7,7 +9,6 @@ import { supabase } from './supabase';
 const DEMO_MODE_KEY = 'hkcampus_demo_mode';
 const BIOMETRIC_KEY = 'hkcampus_biometric_enabled';
 const BIOMETRIC_CRED_KEY = 'hkcampus_user_credentials';
-const AVATAR_STORAGE_BUCKET = 'avatars';
 
 // Global flag to skip auth redirects during password reset flow
 let skipAuthRedirect = false;
@@ -17,50 +18,6 @@ export const setSkipAuthRedirect = (skip: boolean) => {
 };
 
 export const shouldSkipAuthRedirect = () => skipAuthRedirect;
-
-/**
- * Check if a string is a local file path
- */
-const isLocalFilePath = (uri: string): boolean => {
-    if (!uri) return false;
-    return uri.startsWith('file://') || 
-           uri.startsWith('/var/') || 
-           uri.startsWith('/data/') ||
-           uri.includes('ImagePicker') ||
-           uri.includes('ExponentExperienceData');
-};
-
-/**
- * Upload avatar image to Supabase Storage and return public URL
- */
-export const uploadAvatar = async (uri: string, userId: string): Promise<string> => {
-    try {
-        const response = await fetch(uri);
-        const blob = await response.blob();
-        const fileName = `${userId}/${Date.now()}.jpg`;
-
-        const { data, error } = await supabase.storage
-            .from(AVATAR_STORAGE_BUCKET)
-            .upload(fileName, blob, {
-                contentType: 'image/jpeg',
-                upsert: true,
-            });
-
-        if (error) {
-            console.error('Avatar upload error:', error);
-            throw error;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-            .from(AVATAR_STORAGE_BUCKET)
-            .getPublicUrl(fileName);
-
-        return publicUrl;
-    } catch (e) {
-        console.error('Failed to upload avatar:', e);
-        return uri; // Return original URI on failure
-    }
-};
 
 // Helper to check if we are in demo mode
 export const isDemoMode = async () => {
@@ -209,23 +166,12 @@ export const createUserProfile = async (
     major: string,
     avatarUrl: string = ''
 ) => {
-    // Upload avatar to cloud storage if it's a local file path
-    let finalAvatarUrl = avatarUrl;
-    if (avatarUrl && isLocalFilePath(avatarUrl)) {
-        try {
-            finalAvatarUrl = await uploadAvatar(avatarUrl, uid);
-        } catch (e) {
-            console.error('Failed to upload avatar, using empty:', e);
-            finalAvatarUrl = '';
-        }
-    }
-
     const userData: User = {
         uid, // Will be stored as 'id' in DB if column name differs, but usually we map JSON
         displayName,
         socialTags,
         major,
-        avatarUrl: finalAvatarUrl,
+        avatarUrl,
         createdAt: new Date(), // Supabase handles timestamp, but we keep structure
     };
 
@@ -238,7 +184,7 @@ export const createUserProfile = async (
             id: uid,
             display_name: displayName,
             major: major,
-            avatar_url: finalAvatarUrl,
+            avatar_url: avatarUrl,
             social_tags: socialTags,
             updated_at: new Date().toISOString(),
         });
@@ -322,4 +268,126 @@ export const getCurrentUser = async () => {
 };
 
 // Re-export auth as compatibility object if needed, but preferably avoid usage.
-export const auth = supabase.auth; 
+export const auth = supabase.auth;
+
+// --- Avatar Upload Functions ---
+
+const USER_AVATARS_BUCKET = 'user-avatars';
+
+/**
+ * Check if a string is a local file path (not a URL)
+ */
+const isLocalFilePath = (uri: string): boolean => {
+    if (!uri) return false;
+    return uri.startsWith('file://') ||
+        uri.startsWith('/var/') ||
+        uri.startsWith('/data/') ||
+        uri.includes('ImagePicker') ||
+        uri.includes('ExponentExperienceData');
+};
+
+/**
+ * Upload user avatar to Supabase Storage
+ * Files are stored in a folder named after the user's ID
+ * @param userId - The user's unique ID
+ * @param imageUri - Local file URI from image picker
+ * @returns Public URL of the uploaded avatar
+ */
+export const uploadUserAvatar = async (userId: string, imageUri: string): Promise<string> => {
+    try {
+        // Create a unique filename: userId/timestamp.jpg
+        const timestamp = Date.now();
+        const fileName = `${userId}/avatar_${timestamp}.jpg`;
+
+        // Delete old avatar files for this user (keep storage clean)
+        try {
+            const { data: existingFiles } = await supabase.storage
+                .from(USER_AVATARS_BUCKET)
+                .list(userId);
+
+            if (existingFiles && existingFiles.length > 0) {
+                const filesToDelete = existingFiles.map(file => `${userId}/${file.name}`);
+                await supabase.storage
+                    .from(USER_AVATARS_BUCKET)
+                    .remove(filesToDelete);
+            }
+        } catch (cleanupError) {
+            // Ignore cleanup errors, proceed with upload
+            console.warn('Avatar cleanup warning:', cleanupError);
+        }
+
+        // Read the file as base64 using expo-file-system (most reliable in React Native)
+        const base64Data = await FileSystem.readAsStringAsync(imageUri, {
+            encoding: 'base64',
+        });
+
+        // Decode base64 to ArrayBuffer for Supabase
+        const arrayBuffer = decode(base64Data);
+
+        // Upload the new avatar
+        const { data, error } = await supabase.storage
+            .from(USER_AVATARS_BUCKET)
+            .upload(fileName, arrayBuffer, {
+                contentType: 'image/jpeg',
+                upsert: true,
+            });
+
+        if (error) {
+            console.error('Avatar upload error:', error);
+            throw error;
+        }
+
+        // Get the public URL
+        const { data: { publicUrl } } = supabase.storage
+            .from(USER_AVATARS_BUCKET)
+            .getPublicUrl(fileName);
+
+        return publicUrl;
+    } catch (e) {
+        console.error('Failed to upload avatar:', e);
+        throw e;
+    }
+};
+
+/**
+ * Update user's avatar URL in the database
+ * @param userId - The user's unique ID
+ * @param avatarUrl - The public URL of the avatar
+ */
+export const updateUserAvatarUrl = async (userId: string, avatarUrl: string): Promise<void> => {
+    const { error } = await supabase
+        .from('users')
+        .update({
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+    if (error) {
+        console.error('Error updating avatar URL:', error);
+        throw error;
+    }
+};
+
+/**
+ * Upload avatar and update user profile in one call
+ * @param userId - The user's unique ID
+ * @param imageUri - Local file URI from image picker
+ * @returns The new avatar public URL
+ */
+export const uploadAndUpdateAvatar = async (userId: string, imageUri: string): Promise<string> => {
+    // Only upload if it's a local file
+    if (!isLocalFilePath(imageUri)) {
+        // If it's already a URL, just update the database
+        await updateUserAvatarUrl(userId, imageUri);
+        return imageUri;
+    }
+
+    // Upload the image
+    const publicUrl = await uploadUserAvatar(userId, imageUri);
+
+    // Update the user profile with the new URL
+    await updateUserAvatarUrl(userId, publicUrl);
+
+    return publicUrl;
+};
