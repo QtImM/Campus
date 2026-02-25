@@ -11,7 +11,7 @@ export const fetchExchanges = async (): Promise<CourseExchange[]> => {
     try {
         const { data, error } = await supabase
             .from(EXCHANGES_TABLE)
-            .select('*, author:users!user_id(*)')
+            .select('*')
             .eq('status', 'open')
             .order('created_at', { ascending: false });
 
@@ -70,7 +70,7 @@ export const fetchExchangeComments = async (exchangeId: string): Promise<Exchang
     try {
         const { data, error } = await supabase
             .from(EXCHANGE_COMMENTS_TABLE)
-            .select('*, author:users!author_id(*)')
+            .select('*')
             .eq('exchange_id', exchangeId)
             .order('created_at', { ascending: true });
 

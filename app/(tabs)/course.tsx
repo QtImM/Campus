@@ -82,27 +82,39 @@ export default function CoursesScreen() {
             // 2. Fetch from Local Storage
             const localCourses = await getLocalCourses();
 
-            // 3. Merge All (Local > DB > Mock)
-            const allItems = [...localCourses, ...dbCourses];
-
-            MOCK_COURSES.forEach(mock => {
-                if (!allItems.find(c => c.code === mock.code)) {
-                    allItems.push(mock);
+            // 3. Merge All (Local > DB > Mock) - deduplicate by id
+            const courseMap = new Map<string, Course>();
+            
+            // Add local courses first (highest priority)
+            localCourses.forEach(c => courseMap.set(c.id, c));
+            
+            // Add DB courses (won't overwrite local)
+            dbCourses.forEach(c => {
+                if (!courseMap.has(c.id)) {
+                    courseMap.set(c.id, c);
                 }
             });
 
-            setCourses(allItems);
+            // Add mock courses (lowest priority)
+            MOCK_COURSES.forEach(mock => {
+                if (!courseMap.has(mock.id) && ![...courseMap.values()].find(c => c.code === mock.code)) {
+                    courseMap.set(mock.id, mock);
+                }
+            });
+
+            setCourses(Array.from(courseMap.values()));
         } catch (err) {
             console.log('Fetch courses silent error (expected if table missing):', err);
             // Fallback to local + mock if everything fails
             const localOnly = await getLocalCourses();
-            const fallback = [...localOnly];
+            const fallbackMap = new Map<string, Course>();
+            localOnly.forEach(c => fallbackMap.set(c.id, c));
             MOCK_COURSES.forEach(mock => {
-                if (!fallback.find(c => c.code === mock.code)) {
-                    fallback.push(mock);
+                if (!fallbackMap.has(mock.id) && ![...fallbackMap.values()].find(c => c.code === mock.code)) {
+                    fallbackMap.set(mock.id, mock);
                 }
             });
-            setCourses(fallback);
+            setCourses(Array.from(fallbackMap.values()));
         } finally {
             setLoading(false);
             setRefreshing(false);

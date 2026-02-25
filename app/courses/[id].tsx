@@ -25,6 +25,12 @@ import { supabase } from '../../services/supabase';
 import { fetchTeamingComments, fetchTeamingRequests, postTeamingComment, postTeamingRequest, toggleTeamingLike } from '../../services/teaming';
 import { ContactMethod, Course, CourseTeaming, Review, TeamingComment } from '../../types';
 
+// Helper function to check if string is a URL
+const isImageUrl = (str: string): boolean => {
+    if (!str) return false;
+    return str.startsWith('http://') || str.startsWith('https://');
+};
+
 // Mock Data
 const MOCK_REVIEWS: Review[] = [
     {
@@ -120,7 +126,7 @@ export default function CourseDetailScreen() {
         const { data } = await supabase
             .from('messages')
             .select('*, users(display_name, avatar_url)')
-            .eq('room_id', roomId)
+            .eq('course_id', id as string)
             .order('created_at', { ascending: true });
 
         if (data) setMessages(data);
@@ -160,7 +166,7 @@ export default function CourseDetailScreen() {
                 event: 'INSERT',
                 schema: 'public',
                 table: 'messages',
-                filter: `room_id=eq.${roomId}`
+                filter: `course_id=eq.${id}`
             }, async (payload) => {
                 // Fetch user info for the new message
                 const { data: userData } = await supabase
@@ -189,7 +195,7 @@ export default function CourseDetailScreen() {
         const { error } = await supabase
             .from('messages')
             .insert({
-                room_id: roomId,
+                course_id: id as string,
                 sender_id: user.uid,
                 content: newMessage.trim()
             });
@@ -333,7 +339,7 @@ export default function CourseDetailScreen() {
                 value: teamingContactValues[p] || ''
             }));
 
-            const { success, data } = await postTeamingRequest({
+            const { success, data, error } = await postTeamingRequest({
                 courseId: id as string,
                 userId: user.uid,
                 userName: user.display_name || 'Anonymous',
@@ -350,6 +356,8 @@ export default function CourseDetailScreen() {
                 setIsTeamingModalVisible(false);
                 resetTeamingForm();
                 Alert.alert('Success', 'Teaming request posted!');
+            } else {
+                Alert.alert('Error', error || 'Failed to post teaming request');
             }
         } catch (error) {
             Alert.alert('Error', 'Failed to post teaming request');
@@ -419,7 +427,7 @@ export default function CourseDetailScreen() {
     const handleSendTeamingComment = async () => {
         if (!user || !selectedTeamingForComments || !newTeamingComment.trim()) return;
 
-        const { success } = await postTeamingComment(selectedTeamingForComments.id, user, newTeamingComment.trim());
+        const { success, error } = await postTeamingComment(selectedTeamingForComments.id, user, newTeamingComment.trim());
         if (success) {
             setNewTeamingComment('');
             const comments = await fetchTeamingComments(selectedTeamingForComments.id);
@@ -432,7 +440,7 @@ export default function CourseDetailScreen() {
                 return req;
             }));
         } else {
-            Alert.alert('Error', 'Failed to post comment.');
+            Alert.alert('Error', error || 'Failed to post comment.');
         }
     };
 
@@ -511,7 +519,7 @@ export default function CourseDetailScreen() {
             <View style={styles.teamingHeader}>
                 <View style={styles.authorInfo}>
                     <View style={styles.avatarContainer}>
-                        {item.userAvatar && item.userAvatar.length > 2 ? (
+                        {isImageUrl(item.userAvatar) ? (
                             <Image source={{ uri: item.userAvatar }} style={styles.avatarImage} />
                         ) : (
                             <Text style={styles.avatarFallbackText}>{item.userAvatar || '👤'}</Text>
@@ -583,7 +591,7 @@ export default function CourseDetailScreen() {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <TouchableOpacity style={styles.backButton} onPress={() => router.navigate('/(tabs)/course')}>
                     <ChevronLeft size={24} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} numberOfLines={1}>{course.code}</Text>
@@ -1107,7 +1115,14 @@ export default function CourseDetailScreen() {
                                             borderBottomWidth: 1,
                                             borderBottomColor: '#F3F4F6'
                                         }}>
-                                            <Text style={{ fontSize: 24, marginRight: 12 }}>{item.authorAvatar}</Text>
+                                            {isImageUrl(item.authorAvatar) ? (
+                                                <Image 
+                                                    source={{ uri: item.authorAvatar }} 
+                                                    style={{ width: 36, height: 36, borderRadius: 18, marginRight: 12 }}
+                                                />
+                                            ) : (
+                                                <Text style={{ fontSize: 24, marginRight: 12 }}>{item.authorAvatar || '👤'}</Text>
+                                            )}
                                             <View style={{ flex: 1 }}>
                                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                                                     <Text style={{ fontWeight: '700', color: '#111827' }}>{item.authorName}</Text>
@@ -1200,11 +1215,11 @@ const styles = StyleSheet.create({
     },
     backButton: { padding: 4 },
     headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
-    scrollContent: { paddingBottom: 40 },
+    scrollContent: { paddingTop: 10, paddingBottom: 40 },
     courseInfoCard: {
         backgroundColor: '#fff',
         margin: 20,
-        marginTop: -30,
+        marginTop: 10,
         borderRadius: 20,
         padding: 24,
         alignItems: 'center',

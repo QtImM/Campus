@@ -3,16 +3,55 @@ import { supabase } from './supabase';
 
 const TEAMING_TABLE = 'course_teaming';
 const TEAMING_COMMENTS_TABLE = 'teaming_comments';
+const TEAMING_STORAGE_BUCKET = 'teaming-avatars';
+
+/**
+ * Check if a string is a local file path (not a URL)
+ */
+const isLocalFilePath = (uri: string): boolean => {
+    if (!uri) return false;
+    return uri.startsWith('file://') || 
+           uri.startsWith('/var/') || 
+           uri.startsWith('/data/') ||
+           uri.includes('ImagePicker') ||
+           uri.includes('ExponentExperienceData');
+};
+
+/**
+ * Upload avatar image to Supabase Storage and return public URL
+ */
+const uploadTeamingAvatar = async (uri: string, prefix: string): Promise<string> => {
+    try {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        const fileName = `${prefix}/${Date.now()}.jpg`;
+
+        const { data, error } = await supabase.storage
+            .from(TEAMING_STORAGE_BUCKET)
+            .upload(fileName, blob, {
+                contentType: 'image/jpeg',
+            });
+
+        if (error) {
+            console.error('Avatar upload error:', error);
+            throw error;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+            .from(TEAMING_STORAGE_BUCKET)
+            .getPublicUrl(fileName);
+
+        return publicUrl;
+    } catch (e) {
+        console.error('Failed to upload avatar:', e);
+        return '👤'; // Return default emoji on failure
+    }
+};
 
 /**
  * Fetch teaming requests for a specific course.
  */
 export const fetchTeamingRequests = async (courseId: string): Promise<CourseTeaming[]> => {
-    // Skip DB query for local/offline courses to avoid UUID type mismatch
-    if (courseId.startsWith('local_')) {
-        return getMockTeaming(courseId);
-    }
-
     try {
         const { data, error } = await supabase
             .from(TEAMING_TABLE)
@@ -23,26 +62,32 @@ export const fetchTeamingRequests = async (courseId: string): Promise<CourseTeam
 
         if (error) {
             console.error('Error fetching teaming requests:', error);
-            return getMockTeaming(courseId);
+            return [];
         }
 
         return (data || []).map(mapSupabaseToTeaming);
     } catch (e) {
         console.error('Exception fetching teaming requests:', e);
-        return getMockTeaming(courseId);
+        return [];
     }
 };
 
 /**
  * Post a new teaming request.
  */
-export const postTeamingRequest = async (request: Partial<CourseTeaming>): Promise<{ success: boolean; data?: CourseTeaming }> => {
+export const postTeamingRequest = async (request: Partial<CourseTeaming>): Promise<{ success: boolean; data?: CourseTeaming; error?: string }> => {
     try {
+        // Upload avatar if it's a local file path
+        let avatarUrl = request.userAvatar || '👤';
+        if (isLocalFilePath(avatarUrl)) {
+            avatarUrl = await uploadTeamingAvatar(avatarUrl, `teaming-${request.userId}`);
+        }
+
         const teamingData = {
             course_id: request.courseId,
             user_id: request.userId,
             user_name: request.userName,
-            user_avatar: request.userAvatar,
+            user_avatar: avatarUrl,
             user_major: request.userMajor,
             section: request.section,
             self_intro: request.selfIntro,
@@ -53,22 +98,31 @@ export const postTeamingRequest = async (request: Partial<CourseTeaming>): Promi
             comment_count: 0,
         };
 
+        console.log('Inserting teaming data:', JSON.stringify(teamingData, null, 2));
+
         const { data, error } = await supabase
             .from(TEAMING_TABLE)
             .insert(teamingData)
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase insert error:', error);
+            return {
+                success: false,
+                error: error.message,
+            };
+        }
 
         return {
             success: true,
             data: mapSupabaseToTeaming(data),
         };
-    } catch (e) {
+    } catch (e: any) {
         console.error('Error posting teaming request:', e);
         return {
             success: false,
+            error: e?.message || 'Unknown error',
         };
     }
 };
@@ -114,52 +168,84 @@ export const fetchTeamingComments = async (teamingId: string): Promise<TeamingCo
 
         if (error) {
             console.error('Error fetching teaming comments:', error);
-            return getMockTeamingComments(teamingId);
+            return [];
         }
 
         return (data || []).map(mapSupabaseToTeamingComment);
     } catch (e) {
         console.error('Exception fetching teaming comments:', e);
-        return getMockTeamingComments(teamingId);
+        return [];
     }
 };
 
 /**
  * Post a comment to a teaming request.
  */
-export const postTeamingComment = async (teamingId: string, author: any, content: string): Promise<{ success: boolean }> => {
+export const postTeamingComment = async (teamingId: string, author: any, content: string): Promise<{ success: boolean; error?: string }> => {
     try {
+        // Support both naming conventions (uid/id, displayName/name, avatarUrl/avatar)
+        const authorId = author.uid || author.id;
+        const authorName = author.displayName || author.display_name || author.name || 'Anonymous';
+        let authorAvatar = author.avatarUrl || author.avatar_url || author.avatar || '👤';
+
+        // Upload avatar if it's a local file path
+        if (isLocalFilePath(authorAvatar)) {
+            authorAvatar = await uploadTeamingAvatar(authorAvatar, `comment-${authorId}`);
+        }
+
+        console.log('Posting teaming comment:', { teamingId, authorId, authorName, content });
+
         const { error: insertError } = await supabase
             .from(TEAMING_COMMENTS_TABLE)
             .insert({
                 teaming_id: teamingId,
-                author_id: author.id,
-                author_name: author.name,
-                author_avatar: author.avatar,
+                author_id: authorId,
+                author_name: authorName,
+                author_avatar: authorAvatar,
                 content,
             });
 
-        if (insertError) throw insertError;
+        if (insertError) {
+            console.error('Error inserting teaming comment:', insertError);
+            return { success: false, error: insertError.message };
+        }
 
         // Increment comment count
         await incrementTeamingCommentCount(teamingId);
 
         return { success: true };
-    } catch (e) {
+    } catch (e: any) {
         console.error('Error posting teaming comment:', e);
-        return { success: false };
+        return { success: false, error: e?.message || 'Unknown error' };
     }
 };
 
 // Helper functions
+
+// Helper to check if avatar is a valid URL (not local file path)
+const isValidAvatarUrl = (url: string): boolean => {
+    if (!url) return false;
+    return url.startsWith('http://') || url.startsWith('https://') || url.length <= 2; // Allow emoji
+};
+
 const mapSupabaseToTeaming = (data: any): CourseTeaming => {
     const author = data.author;
+    
+    // Prefer data.user_avatar (saved at post time), fallback to author.avatar_url only if valid
+    let avatarToUse = data.user_avatar;
+    if (!isValidAvatarUrl(avatarToUse) && author?.avatar_url && isValidAvatarUrl(author.avatar_url)) {
+        avatarToUse = author.avatar_url;
+    }
+    if (!isValidAvatarUrl(avatarToUse)) {
+        avatarToUse = '👤';
+    }
+    
     return {
         id: data.id,
         courseId: data.course_id,
         userId: data.user_id,
         userName: author ? (author.display_name || author.displayName) : data.user_name,
-        userAvatar: author ? author.avatar_url : data.user_avatar,
+        userAvatar: avatarToUse,
         userMajor: author ? author.major : data.user_major,
         section: data.section,
         selfIntro: data.self_intro,
@@ -174,12 +260,22 @@ const mapSupabaseToTeaming = (data: any): CourseTeaming => {
 
 const mapSupabaseToTeamingComment = (data: any): TeamingComment => {
     const author = data.author;
+    
+    // Prefer data.author_avatar (saved at comment time), fallback to author.avatar_url only if valid
+    let avatarToUse = data.author_avatar;
+    if (!isValidAvatarUrl(avatarToUse) && author?.avatar_url && isValidAvatarUrl(author.avatar_url)) {
+        avatarToUse = author.avatar_url;
+    }
+    if (!isValidAvatarUrl(avatarToUse)) {
+        avatarToUse = '👤';
+    }
+    
     return {
         id: data.id,
         teamingId: data.teaming_id,
         authorId: data.author_id,
         authorName: author ? (author.display_name || author.displayName) : data.author_name,
-        authorAvatar: author ? author.avatar_url : data.author_avatar,
+        authorAvatar: avatarToUse,
         content: data.content,
         createdAt: new Date(data.created_at),
     };
@@ -192,57 +288,3 @@ const incrementTeamingCommentCount = async (teamingId: string) => {
         console.error('Error incrementing comment count:', e);
     }
 };
-
-const getMockTeamingComments = (teamingId: string): TeamingComment[] => [
-    {
-        id: 'tc1',
-        teamingId,
-        authorId: 'u5',
-        authorName: 'David Chen',
-        authorAvatar: '👨‍🎓',
-        content: 'I am interested! I am in Sec1 too.',
-        createdAt: new Date(Date.now() - 3600000)
-    }
-];
-
-/**
- * Mock data generator.
- */
-const getMockTeaming = (courseId: string): CourseTeaming[] => [
-    {
-        id: 't1',
-        courseId,
-        userId: 'u1',
-        userName: 'Zhang Wei',
-        userAvatar: '👤',
-        userMajor: 'Computer Science',
-        section: 'Sec1',
-        selfIntro: 'I am a Year 3 student proficient in Python and React.',
-        targetTeammate: 'Looking for someone who is responsible and can contribute to the frontend.',
-        contacts: [
-            { platform: 'WeChat', value: 'zw12345' }
-        ],
-        createdAt: new Date(Date.now() - 86400000),
-        status: 'open',
-        likes: 3,
-        commentCount: 1
-    },
-    {
-        id: 't2',
-        courseId,
-        userId: 'u2',
-        userName: 'Sarah Lee',
-        userAvatar: '👩‍🎓',
-        userMajor: 'Marketing',
-        section: 'Sec2',
-        selfIntro: 'Marketing student with experience in UI/UX research.',
-        targetTeammate: 'Need a technical partner for the data analysis part.',
-        contacts: [
-            { platform: 'WhatsApp', value: '98765432' }
-        ],
-        createdAt: new Date(Date.now() - 172800000),
-        status: 'open',
-        likes: 1,
-        commentCount: 0
-    }
-];

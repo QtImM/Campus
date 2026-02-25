@@ -75,7 +75,39 @@ export const getLocalCourses = async (): Promise<Course[]> => {
         // 2. Add storage data (can overwrite static if same ID, or add new ones)
         storageCourses.forEach(c => courseMap.set(c.id, c));
 
-        return Array.from(courseMap.values());
+        const courses = Array.from(courseMap.values());
+
+        // 3. Fetch review data from database for all local courses
+        const courseIds = courses.map(c => c.id);
+        const { data: reviewData, error } = await supabase
+            .from('course_reviews')
+            .select('course_id, rating')
+            .in('course_id', courseIds)
+            .not('rating', 'is', null);
+
+        if (!error && reviewData) {
+            // Calculate count and average rating per course
+            const statsMap = new Map<string, { count: number; sum: number }>();
+            reviewData.forEach(r => {
+                const stats = statsMap.get(r.course_id) || { count: 0, sum: 0 };
+                stats.count += 1;
+                stats.sum += r.rating || 0;
+                statsMap.set(r.course_id, stats);
+            });
+
+            // Update course review counts and ratings
+            courses.forEach(course => {
+                const stats = statsMap.get(course.id);
+                if (stats && stats.count > 0) {
+                    course.reviewCount = stats.count;
+                    course.rating = parseFloat((stats.sum / stats.count).toFixed(1));
+                } else {
+                    course.reviewCount = 0;
+                }
+            });
+        }
+
+        return courses;
     } catch (e) {
         console.error('Error loading local courses:', e);
         return SEM2_COURSES_DATA as Course[];
@@ -188,15 +220,10 @@ export const getCourseById = async (id: string): Promise<Course | null> => {
 };
 
 export const getReviews = async (courseId: string): Promise<Review[]> => {
-    // 1. Check for Local ID
-    if (courseId.startsWith('local_')) {
-        return await getLocalReviews(courseId);
-    }
-
-    // 2. Query Supabase
+    // Query Supabase for all courses (including local_ ones)
     const { data, error } = await supabase
         .from('course_reviews')
-        .select('*, author:users!author_id(*)')
+        .select('*')
         .eq('course_id', courseId)
         .order('created_at', { ascending: false });
 
@@ -206,13 +233,12 @@ export const getReviews = async (courseId: string): Promise<Review[]> => {
     }
     if (!data) return [];
     return data.map(r => {
-        const author = r.author;
         return {
             id: r.id,
             courseId: r.course_id,
             authorId: r.author_id,
-            authorName: author ? (author.display_name || author.displayName) : (r.author_name || 'Anonymous'),
-            authorAvatar: author ? author.avatar_url : (r.author_avatar || '👤'),
+            authorName: r.author_name || 'Anonymous',
+            authorAvatar: r.author_avatar || '👤',
             rating: r.rating,
             difficulty: r.difficulty || 3,
             content: r.content || '',
@@ -225,9 +251,7 @@ export const getReviews = async (courseId: string): Promise<Review[]> => {
 };
 
 export const hasUserReviewed = async (courseId: string, userId: string): Promise<boolean> => {
-    // For local courses, we skip the unique check or implement locally. 
-    // For now, let's keep it simple.
-    if (courseId.startsWith('local_')) return false;
+    // Check in database for all courses (including local_ ones)
 
     const { count, error } = await supabase
         .from('course_reviews')
@@ -240,16 +264,13 @@ export const hasUserReviewed = async (courseId: string, userId: string): Promise
 };
 
 export const addReview = async (reviewData: Partial<Review>): Promise<{ error: any }> => {
-    // 1. Check for Local ID
-    if (reviewData.courseId?.startsWith('local_')) {
-        return await addLocalReview(reviewData);
-    }
+    const courseId = reviewData.courseId;
 
-    // 2. Insert the review to Supabase
+    // Insert the review to Supabase (all courses including local_ ones)
     const { error: insertError } = await supabase
         .from('course_reviews')
         .insert({
-            course_id: reviewData.courseId,
+            course_id: courseId,
             author_id: reviewData.authorId,
             author_name: reviewData.authorName,
             author_avatar: reviewData.authorAvatar,
@@ -261,15 +282,19 @@ export const addReview = async (reviewData: Partial<Review>): Promise<{ error: a
 
     if (insertError) {
         console.error('addReview insertError:', insertError);
+        // Fallback to local storage only if DB insert fails
+        if (courseId?.startsWith('local_')) {
+            return await addLocalReview(reviewData);
+        }
         return { error: insertError };
     }
 
-    // 3. Recalculate average rating if stars were provided
+    // Recalculate average rating if stars were provided
     if (reviewData.rating) {
         const { data: allRatings } = await supabase
             .from('course_reviews')
             .select('rating')
-            .eq('course_id', reviewData.courseId)
+            .eq('course_id', courseId)
             .not('rating', 'is', null);
 
         if (allRatings && allRatings.length > 0) {
@@ -282,7 +307,7 @@ export const addReview = async (reviewData: Partial<Review>): Promise<{ error: a
                     rating: parseFloat(avg.toFixed(1)),
                     review_count: allRatings.length
                 })
-                .eq('id', reviewData.courseId);
+                .eq('id', courseId);
         }
     }
 

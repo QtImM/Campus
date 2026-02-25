@@ -302,7 +302,7 @@ export default function FoodScreen() {
     const handleLike = async (id: string) => {
         try {
             if (!currentUser) {
-                router.push('/profile');
+                router.push('/(tabs)/profile');
                 return;
             }
 

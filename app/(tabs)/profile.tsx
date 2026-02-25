@@ -1,18 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatDistanceToNow } from 'date-fns';
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Bell, Bot, ChevronRight, Copy, Edit3, Globe, Heart as HeartIcon, HelpCircle, LogOut, Mail, MessageSquare, Sparkles, X } from 'lucide-react-native';
+import { Bell, Bot, Camera, ChevronRight, Copy, Edit3, Globe, Heart as HeartIcon, HelpCircle, LogOut, Mail, MessageSquare, Sparkles, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, FlatList, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { createUserProfile, getCurrentUser, getUserProfile, signOut } from '../../services/auth';
+import { createUserProfile, getCurrentUser, getUserProfile, signOut, uploadAndUpdateAvatar } from '../../services/auth';
 import { fetchNotifications, markAllAsRead, markAsRead, Notification, subscribeToNotifications } from '../../services/notifications';
 import { SOCIAL_TAGS, User as UserProfile } from '../../types';
 import { changeLanguage } from '../i18n/i18n';
 
 const DEMO_MODE_KEY = 'hkcampus_demo_mode';
 
+// Helper to check if avatar URL is valid (not a local file path)
+const isValidAvatarUrl = (url?: string) => {
+    if (!url) return false;
+    return url.startsWith('http://') || url.startsWith('https://');
+};
 
 const LANGUAGE_OPTIONS = [
     { key: 'zh-Hans', label: '简' },
@@ -32,6 +38,7 @@ export default function ProfileScreen() {
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
 
@@ -173,6 +180,55 @@ export default function ProfileScreen() {
         }
     };
 
+    const handleAvatarPress = async () => {
+        if (!userId) {
+            Alert.alert(t('common.error', 'Error'), t('profile.login_required', 'Please log in first'));
+            return;
+        }
+
+        // Request permission
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert(
+                t('common.permission_required', 'Permission Required'),
+                t('profile.photo_permission', 'Please allow access to photos to change your avatar')
+            );
+            return;
+        }
+
+        // Launch image picker
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (result.canceled || !result.assets || result.assets.length === 0) {
+            return;
+        }
+
+        const imageUri = result.assets[0].uri;
+        setUploadingAvatar(true);
+
+        try {
+            const newAvatarUrl = await uploadAndUpdateAvatar(userId, imageUri);
+            
+            // Update local profile state
+            setProfile(prev => prev ? { ...prev, avatarUrl: newAvatarUrl } : null);
+            
+            Alert.alert(t('common.success', 'Success'), t('profile.avatar_updated', 'Avatar updated successfully'));
+        } catch (error: any) {
+            console.error('Avatar upload failed:', error);
+            Alert.alert(
+                t('common.error', 'Error'),
+                t('profile.avatar_upload_failed', 'Failed to upload avatar. Please try again.')
+            );
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
+
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             {/* Header */}
@@ -182,13 +238,20 @@ export default function ProfileScreen() {
 
             {/* Profile Card */}
             <View style={styles.profileCard}>
-                <View style={styles.avatar}>
-                    {profile?.avatarUrl ? (
-                        <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} />
-                    ) : (
-                        <Text style={styles.avatarText}>{profile?.displayName?.charAt(0) || '你'}</Text>
-                    )}
-                </View>
+                <TouchableOpacity style={styles.avatarContainer} onPress={handleAvatarPress} disabled={uploadingAvatar}>
+                    <View style={styles.avatar}>
+                        {uploadingAvatar ? (
+                            <ActivityIndicator color="#fff" size="small" />
+                        ) : isValidAvatarUrl(profile?.avatarUrl) ? (
+                            <Image source={{ uri: profile!.avatarUrl }} style={styles.avatarImage} />
+                        ) : (
+                            <Text style={styles.avatarText}>{profile?.displayName?.charAt(0) || '你'}</Text>
+                        )}
+                    </View>
+                    <View style={styles.avatarCameraIcon}>
+                        <Camera size={12} color="#fff" />
+                    </View>
+                </TouchableOpacity>
                 <View style={styles.profileInfo}>
                     <Text style={styles.profileName}>{profile?.displayName || (loadingProfile ? '...' : 'Demo Student')}</Text>
                     <Text style={styles.profileMajor}>{profile?.major || (loadingProfile ? '...' : 'HKBU Student')}</Text>
@@ -497,6 +560,9 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 2,
     },
+    avatarContainer: {
+        position: 'relative',
+    },
     avatar: {
         width: 60,
         height: 60,
@@ -514,6 +580,19 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 24,
         fontWeight: 'bold',
+    },
+    avatarCameraIcon: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: '#3B82F6',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: '#fff',
     },
     profileInfo: {
         flex: 1,
