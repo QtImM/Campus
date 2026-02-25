@@ -121,15 +121,18 @@ export default function TeacherListScreen() {
     );
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.container}>
             <Stack.Screen options={{
                 headerShown: false // 我们自己处理状态栏和Header
             }} />
 
+            {/* Status Bar Background */}
+            <View style={[styles.statusBarBg, { height: insets.top }]} />
+
             {/* Custom Header */}
             <View style={styles.customHeader}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <ArrowLeft size={24} color="#1E3A8A" />
+                <TouchableOpacity onPress={() => router.replace('/(tabs)/course')} style={styles.backBtn}>
+                    <ArrowLeft size={24} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} numberOfLines={1}>{t('teachers.title')}</Text>
                 <View style={{ width: 40 }} />
@@ -141,7 +144,7 @@ export default function TeacherListScreen() {
                     <Search size={20} color="#9CA3AF" />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder={t('teachers.search_placeholder') || t('common.search_placeholder')}
+                        placeholder="輸入講師名字..."
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         clearButtonMode="while-editing"
@@ -238,10 +241,13 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F3F4F6',
     },
+    statusBarBg: {
+        backgroundColor: '#1E3A8A',
+    },
     searchSection: {
-        backgroundColor: '#fff',
+        backgroundColor: '#1E3A8A',
         paddingHorizontal: 16,
-        paddingBottom: 8,
+        paddingBottom: 16,
     },
     customHeader: {
         height: 56,
@@ -249,7 +255,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        backgroundColor: '#fff',
+        backgroundColor: '#1E3A8A',
     },
     backBtn: {
         padding: 4,
@@ -257,7 +263,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: '#111827',
+        color: '#fff',
         flex: 1,
         textAlign: 'center',
     },
@@ -280,6 +286,7 @@ const styles = StyleSheet.create({
     },
     filterContainer: {
         backgroundColor: '#fff',
+        paddingTop: 12,
         paddingBottom: 12,
         borderBottomWidth: 1,
         borderBottomColor: '#E5E7EB',

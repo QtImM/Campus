@@ -678,21 +678,34 @@ export default function CourseDetailScreen() {
                                 </TouchableOpacity>
                             </View>
 
-                            {sortedReviews.map(review => (
-                                <View key={review.id} style={{ marginBottom: 12 }}>
-                                    {renderReviewItem({ item: review })}
+                            {sortedReviews.length === 0 ? (
+                                <View style={styles.emptyContainer}>
+                                    <MessageSquare size={48} color="#D1D5DB" />
+                                    <Text style={styles.emptyText}>No reviews yet. Be the first!</Text>
                                 </View>
-                            ))}
+                            ) : (
+                                sortedReviews.map(review => (
+                                    <View key={review.id} style={{ marginBottom: 12 }}>
+                                        {renderReviewItem({ item: review })}
+                                    </View>
+                                ))
+                            )}
                         </>
                     ) : activeTab === 'chat' ? (
                         <View style={styles.chatContainer}>
-                            {messages.map((msg, index) => (
-                                <View key={msg.id || index} style={[
-                                    styles.messageRow,
-                                    msg.sender_id === user?.uid ? styles.myMessageRow : styles.otherMessageRow
-                                ]}>
-                                    {msg.sender_id !== user?.uid && (
-                                        <Text style={styles.chatAvatar}>{msg.users?.avatar_url || '👤'}</Text>
+                            {messages.length === 0 ? (
+                                <View style={styles.emptyContainer}>
+                                    <MessageCircle size={48} color="#D1D5DB" />
+                                    <Text style={styles.emptyText}>No messages yet. Be the first!</Text>
+                                </View>
+                            ) : (
+                                messages.map((msg, index) => (
+                                    <View key={msg.id || index} style={[
+                                        styles.messageRow,
+                                        msg.sender_id === user?.uid ? styles.myMessageRow : styles.otherMessageRow
+                                    ]}>
+                                        {msg.sender_id !== user?.uid && (
+                                            <Text style={styles.chatAvatar}>{msg.users?.avatar_url || '👤'}</Text>
                                     )}
                                     <View style={[
                                         styles.messageBubble,
@@ -706,7 +719,8 @@ export default function CourseDetailScreen() {
                                         </Text>
                                     </View>
                                 </View>
-                            ))}
+                            ))
+                            )}
                         </View>
                     ) : (
                         <View style={styles.teamingContainer}>

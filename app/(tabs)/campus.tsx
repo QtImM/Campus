@@ -272,6 +272,7 @@ export default function CampusScreen() {
                 onConfirm={confirmDelete}
                 onCancel={() => setDeleteModalVisible(false)}
                 confirmText={t('campus.modals.delete_confirm')}
+                cancelText={t('common.cancel')}
             />
 
             <Toast
