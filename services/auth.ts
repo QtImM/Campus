@@ -8,6 +8,15 @@ const DEMO_MODE_KEY = 'hkcampus_demo_mode';
 const BIOMETRIC_KEY = 'hkcampus_biometric_enabled';
 const BIOMETRIC_CRED_KEY = 'hkcampus_user_credentials';
 
+// Global flag to skip auth redirects during password reset flow
+let skipAuthRedirect = false;
+
+export const setSkipAuthRedirect = (skip: boolean) => {
+    skipAuthRedirect = skip;
+};
+
+export const shouldSkipAuthRedirect = () => skipAuthRedirect;
+
 // Helper to check if we are in demo mode
 export const isDemoMode = async () => {
     // Priority 1: Check global production config

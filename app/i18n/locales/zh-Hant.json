@@ -203,7 +203,7 @@
         "forgot_password_title": "重置密碼",
         "forgot_password_subtitle": "驗證郵箱以設置新密碼",
         "reset_password_btn": "重置密碼",
-        "reset_success_msg": "密碼重置成功，請登錄",
+        "reset_success_msg": "密碼重置成功",
         "password_same_as_old": "新密碼不能與舊密碼相同，請設置一個新的密碼"
     },
     "setup": {

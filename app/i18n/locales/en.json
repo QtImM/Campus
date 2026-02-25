@@ -203,7 +203,7 @@
         "forgot_password_title": "Reset Password",
         "forgot_password_subtitle": "Verify email to set a new password",
         "reset_password_btn": "Reset Password",
-        "reset_success_msg": "Password reset successful, please login",
+        "reset_success_msg": "Password reset successful",
         "password_same_as_old": "New password cannot be the same as the old password. Please set a different password"
     },
     "setup": {

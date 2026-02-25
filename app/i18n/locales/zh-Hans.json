@@ -203,7 +203,7 @@
         "forgot_password_title": "重置密码",
         "forgot_password_subtitle": "验证邮箱以设置新密码",
         "reset_password_btn": "重置密码",
-        "reset_success_msg": "密码重置成功，请登录",
+        "reset_success_msg": "密码重置成功",
         "password_same_as_old": "新密码不能与旧密码相同，请设置一个新的密码"
     },
     "setup": {

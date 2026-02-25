@@ -3,7 +3,7 @@ import { ArrowLeft, ChevronDown, Eye, EyeOff, Globe, Key } from 'lucide-react-na
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { sendOTP, signIn, signOut, updatePassword, verifyOTP } from '../../services/auth';
+import { sendOTP, setSkipAuthRedirect, signIn, signOut, updatePassword, verifyOTP } from '../../services/auth';
 import { changeLanguage } from '../i18n/i18n';
 
 const DOMAINS = [
@@ -104,9 +104,13 @@ export default function ForgotPasswordScreen() {
         try {
             // 1. 先检查新密码是否与旧密码相同（在验证 OTP 之前）
             try {
+                // 设置标志，阻止 auth 状态变化导致的跳转
+                setSkipAuthRedirect(true);
                 await signIn(fullEmail, password);
                 // 如果登录成功，说明新密码与旧密码相同
                 await signOut();
+                // 清除标志
+                setSkipAuthRedirect(false);
                 setLoading(false);
                 Alert.alert(
                     t('common.tip', '提示'), 
@@ -115,18 +119,24 @@ export default function ForgotPasswordScreen() {
                 return;
             } catch (loginError: any) {
                 // 登录失败说明新密码与旧密码不同，可以继续
+                // 清除标志
+                setSkipAuthRedirect(false);
                 console.log('Password is different, proceeding with OTP verification');
             }
 
-            // 2. 验证 OTP
+            // 2. 验证 OTP（验证成功后用户已登录）
             const user = await verifyOTP(fullEmail, otp);
             if (!user) throw new Error('Verification failed');
 
             // 3. 执行密码重置
             await updatePassword(password);
 
-            Alert.alert(t('common.tip', 'Success'), t('auth.reset_success_msg', 'Password reset successful, please login'), [
-                { text: 'OK', onPress: () => router.replace('/(auth)/login') }
+            // 4. 密码重置成功，用新密码登录
+            await signIn(fullEmail, password);
+            
+            // 5. 显示成功提示并跳转到主页（用户已登录）
+            Alert.alert(t('common.tip', 'Success'), t('auth.reset_success_msg', 'Password reset successful'), [
+                { text: 'OK', onPress: () => router.replace('/(tabs)/campus') }
             ]);
         } catch (error: any) {
             Alert.alert(t('common.error', 'Error'), error.message || t('auth.register_failed', 'Reset failed'));
