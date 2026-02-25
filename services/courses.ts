@@ -75,7 +75,39 @@ export const getLocalCourses = async (): Promise<Course[]> => {
         // 2. Add storage data (can overwrite static if same ID, or add new ones)
         storageCourses.forEach(c => courseMap.set(c.id, c));
 
-        return Array.from(courseMap.values());
+        const courses = Array.from(courseMap.values());
+
+        // 3. Fetch review data from database for all local courses
+        const courseIds = courses.map(c => c.id);
+        const { data: reviewData, error } = await supabase
+            .from('course_reviews')
+            .select('course_id, rating')
+            .in('course_id', courseIds)
+            .not('rating', 'is', null);
+
+        if (!error && reviewData) {
+            // Calculate count and average rating per course
+            const statsMap = new Map<string, { count: number; sum: number }>();
+            reviewData.forEach(r => {
+                const stats = statsMap.get(r.course_id) || { count: 0, sum: 0 };
+                stats.count += 1;
+                stats.sum += r.rating || 0;
+                statsMap.set(r.course_id, stats);
+            });
+
+            // Update course review counts and ratings
+            courses.forEach(course => {
+                const stats = statsMap.get(course.id);
+                if (stats && stats.count > 0) {
+                    course.reviewCount = stats.count;
+                    course.rating = parseFloat((stats.sum / stats.count).toFixed(1));
+                } else {
+                    course.reviewCount = 0;
+                }
+            });
+        }
+
+        return courses;
     } catch (e) {
         console.error('Error loading local courses:', e);
         return SEM2_COURSES_DATA as Course[];

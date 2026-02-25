@@ -583,7 +583,7 @@ export default function CourseDetailScreen() {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <TouchableOpacity style={styles.backButton} onPress={() => router.navigate('/(tabs)/course')}>
                     <ChevronLeft size={24} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} numberOfLines={1}>{course.code}</Text>
@@ -1200,11 +1200,11 @@ const styles = StyleSheet.create({
     },
     backButton: { padding: 4 },
     headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
-    scrollContent: { paddingBottom: 40 },
+    scrollContent: { paddingTop: 10, paddingBottom: 40 },
     courseInfoCard: {
         backgroundColor: '#fff',
         margin: 20,
-        marginTop: -30,
+        marginTop: 10,
         borderRadius: 20,
         padding: 24,
         alignItems: 'center',

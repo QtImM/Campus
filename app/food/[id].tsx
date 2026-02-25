@@ -272,7 +272,7 @@ export default function OutletDetailScreen() {
     const toggleLike = async (reviewId: string) => {
         try {
             if (!currentUser) {
-                router.push('/profile');
+                router.push('/(tabs)/profile');
                 return;
             }
 

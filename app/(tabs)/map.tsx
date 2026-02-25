@@ -871,7 +871,7 @@ export default function MapScreen() {
     };
 
     const handleFindFood = () => {
-        router.push('/food' as any);
+        router.push('/food/index' as any);
     };
 
     const handleWebViewMessage = (event: any) => {
