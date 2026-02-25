@@ -35,7 +35,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { ScreenWrapper } from '../../components/ui/ScreenWrapper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCurrentUser } from '../../services/auth';
 import { fetchExchangeComments, fetchExchanges, postExchange, postExchangeComment, toggleExchangeLike } from '../../services/exchange';
 import { ContactMethod, CourseExchange, ExchangeComment, ExchangeCourseDetail } from '../../types';
@@ -51,6 +51,7 @@ const CONTACT_PLATFORMS = [
 
 export default function ExchangeScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const [exchanges, setExchanges] = useState<CourseExchange[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -465,34 +466,36 @@ export default function ExchangeScreen() {
     );
 
     return (
-        <ScreenWrapper noPadding={true}>
-            <View style={styles.container}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <ArrowLeft size={24} color="#111" />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Course Exchange</Text>
-                    <TouchableOpacity
-                        style={styles.viewToggle}
-                        onPress={() => setViewMode(viewMode === 'card' ? 'compact' : 'card')}
-                    >
-                        {viewMode === 'card' ? <List size={20} color="#8B5CF6" /> : <Grid size={20} color="#8B5CF6" />}
-                    </TouchableOpacity>
-                </View>
+        <View style={styles.container}>
+            {/* Status Bar Background */}
+            <View style={[styles.statusBarBg, { height: insets.top }]} />
 
-                {/* Search */}
-                <View style={styles.searchContainer}>
-                    <View style={styles.searchBar}>
-                        <Search size={20} color="#9CA3AF" />
-                        <TextInput
-                            style={styles.searchInput}
-                            placeholder="Search course code..."
-                            value={searchQuery}
-                            onChangeText={setSearchQuery}
-                        />
-                    </View>
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.replace('/(tabs)/course')} style={styles.backButton}>
+                    <ArrowLeft size={24} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>換課</Text>
+                <TouchableOpacity
+                    style={styles.viewToggle}
+                    onPress={() => setViewMode(viewMode === 'card' ? 'compact' : 'card')}
+                >
+                    {viewMode === 'card' ? <List size={20} color="#fff" /> : <Grid size={20} color="#fff" />}
+                </TouchableOpacity>
+            </View>
+
+            {/* Search */}
+            <View style={styles.searchContainer}>
+                <View style={styles.searchBar}>
+                    <Search size={20} color="#9CA3AF" />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="輸入課程代碼..."
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                    />
                 </View>
+            </View>
 
                 {loading ? (
                     <ActivityIndicator style={{ marginTop: 40 }} color="#8B5CF6" />
@@ -852,7 +855,6 @@ export default function ExchangeScreen() {
                     </View>
                 </Modal>
             </View>
-        </ScreenWrapper >
     );
 }
 
@@ -861,16 +863,17 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F9FAFB',
     },
+    statusBarBg: {
+        backgroundColor: '#1E3A8A',
+    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingTop: 10,
         paddingHorizontal: 20,
-        backgroundColor: '#fff',
+        backgroundColor: '#1E3A8A',
         paddingBottom: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
     },
     backButton: {
         padding: 4,
@@ -878,10 +881,12 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111',
+        color: '#fff',
     },
     searchContainer: {
-        padding: 20,
+        backgroundColor: '#1E3A8A',
+        paddingHorizontal: 20,
+        paddingBottom: 16,
     },
     searchBar: {
         flexDirection: 'row',
@@ -900,6 +905,7 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingHorizontal: 16,
+        paddingTop: 16,
         paddingBottom: 100,
     },
     exchangeCard: {
@@ -920,10 +926,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         marginBottom: 16,
+        gap: 8,
     },
     userInfo: {
         flexDirection: 'row',
         alignItems: 'center',
+        flex: 1,
     },
     userAvatar: {
         fontSize: 28,
@@ -1121,7 +1129,7 @@ const styles = StyleSheet.create({
     },
     viewToggle: {
         padding: 8,
-        backgroundColor: '#F5F3FF',
+        backgroundColor: 'rgba(255,255,255,0.2)',
         borderRadius: 10,
     },
     compactCard: {
