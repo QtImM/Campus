@@ -569,6 +569,19 @@ export default function MapScreen() {
         }
     }, [params.navLat, params.navLng]);
 
+    // Re-open food overlay when returning from food detail.
+    useEffect(() => {
+        const openFoodMapParam = params.openFoodMap;
+        const shouldOpenFoodMap = Array.isArray(openFoodMapParam)
+            ? openFoodMapParam.includes('true')
+            : openFoodMapParam === 'true';
+
+        if (!shouldOpenFoodMap) return;
+
+        setShowFoodMap(true);
+        router.setParams({ openFoodMap: '' });
+    }, [params.openFoodMap, router]);
+
     // Effect to draw line when both locations are known and navigating
     useEffect(() => {
         if (isNavigating && navTarget && userLocation) {

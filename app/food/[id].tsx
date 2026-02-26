@@ -367,6 +367,13 @@ export default function OutletDetailScreen() {
     // For now, let's just use the first one if not found
     const outlet = DINING_OUTLETS.find(o => o.id === id) || DINING_OUTLETS[0];
 
+    const handleBackPress = () => {
+        router.replace({
+            pathname: '/(tabs)/map',
+            params: { openFoodMap: 'true' }
+        } as any);
+    };
+
     const sortedReviews = [...reviews].sort((a, b) => {
         if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         return b.likes - a.likes;
@@ -472,7 +479,7 @@ export default function OutletDetailScreen() {
                     />
                     <TouchableOpacity
                         style={styles.backButton}
-                        onPress={() => router.back()}
+                        onPress={handleBackPress}
                     >
                         <ChevronLeft size={24} color="#fff" />
                     </TouchableOpacity>
