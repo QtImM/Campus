@@ -310,6 +310,8 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: '#111827',
         marginLeft: 12,
+        lineHeight: 20,
+        paddingVertical: 0,
     },
     listContent: {
         padding: 20,

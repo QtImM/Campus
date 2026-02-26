@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { BookOpen, Building, Hash, User, X } from 'lucide-react-native';
+import { BookOpen, Building, Clock, Hash, User, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -13,7 +13,7 @@ import {
     View
 } from 'react-native';
 import { getCurrentUser } from '../../services/auth';
-import { addLocalCourse } from '../../services/courses';
+import { submitCourseForReview } from '../../services/courses';
 
 export default function AddCourseScreen() {
     const router = useRouter();
@@ -36,25 +36,43 @@ export default function AddCourseScreen() {
             return;
         }
 
+        if (!name.trim()) {
+            Alert.alert('Error', 'Please enter the course name');
+            return;
+        }
+
         setLoading(true);
         try {
-            // Priority: Add locally for immediate testing
-            const { data, error } = await addLocalCourse({
-                code: code.trim(),
-                name: name.trim() || undefined,
-                instructor: instructor.trim() || undefined,
-                department: department.trim() || undefined,
-                credits: parseInt(credits)
-            });
+            // 提交课程到审核队列，而非直接添加
+            const { data, error } = await submitCourseForReview(
+                {
+                    code: code.trim(),
+                    name: name.trim(),
+                    instructor: instructor.trim() || undefined,
+                    department: department.trim() || undefined,
+                    credits: parseInt(credits)
+                },
+                {
+                    userId: user.id,
+                    name: user.display_name || user.email,
+                    email: user.email
+                }
+            );
 
             if (error) {
-                Alert.alert('Error', `Failed to add course: ${error.message || 'Please try again.'}`);
-                console.error('Add course local error:', error);
+                if (error.message === 'COURSE_EXISTS') {
+                    Alert.alert('Course Exists', 'This course code already exists in the database.');
+                } else if (error.message === 'SUBMISSION_PENDING') {
+                    Alert.alert('Already Submitted', 'A submission for this course code is already pending review.');
+                } else {
+                    Alert.alert('Error', `Failed to submit course: ${error.message || 'Please try again.'}`);
+                }
+                console.error('Submit course error:', error);
             } else {
                 Alert.alert(
-                    'Success',
-                    'Course added locally successfully!',
-                    [{ text: 'OK', onPress: () => router.back() }]
+                    'Submitted for Review',
+                    'Your course submission has been received and will be reviewed by our team. You will be notified once it is approved.',
+                    [{ text: 'OK', onPress: () => router.replace('/(tabs)/course') }]
                 );
             }
         } catch (err) {
@@ -69,7 +87,7 @@ export default function AddCourseScreen() {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Add New Course</Text>
-                <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+                <TouchableOpacity onPress={() => router.replace('/(tabs)/course')} style={styles.closeButton}>
                     <X size={24} color="#374151" />
                 </TouchableOpacity>
             </View>
@@ -79,6 +97,13 @@ export default function AddCourseScreen() {
                 style={{ flex: 1 }}
             >
                 <ScrollView contentContainerStyle={styles.form}>
+                    <View style={styles.reviewNotice}>
+                        <Clock size={18} color="#D97706" />
+                        <Text style={styles.reviewNoticeText}>
+                            Course submissions require review before being added to the database.
+                        </Text>
+                    </View>
+
                     <Text style={styles.description}>
                         Help us expand the course database. Please ensure the information is accurate.
                     </Text>
@@ -160,8 +185,14 @@ export default function AddCourseScreen() {
                 </ScrollView>
 
                 <View style={styles.footer}>
-                    <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                        <Text style={styles.submitText}>Submit Course</Text>
+                    <TouchableOpacity 
+                        style={[styles.submitButton, loading && styles.submitButtonDisabled]} 
+                        onPress={handleSubmit}
+                        disabled={loading}
+                    >
+                        <Text style={styles.submitText}>
+                            {loading ? 'Submitting...' : 'Submit for Review'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
@@ -193,6 +224,21 @@ const styles = StyleSheet.create({
     },
     form: {
         padding: 24,
+    },
+    reviewNotice: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FEF3C7',
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 16,
+        gap: 10,
+    },
+    reviewNoticeText: {
+        flex: 1,
+        fontSize: 13,
+        color: '#92400E',
+        lineHeight: 18,
     },
     description: {
         fontSize: 14,
@@ -258,6 +304,9 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         paddingVertical: 16,
         alignItems: 'center',
+    },
+    submitButtonDisabled: {
+        opacity: 0.6,
     },
     submitText: {
         color: '#fff',

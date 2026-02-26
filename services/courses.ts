@@ -352,3 +352,173 @@ export const likeReview = async (reviewId: string, courseId: string, isUnlike: b
 
     return { error: null };
 };
+
+// ==================== 课程提交审核系统 ====================
+
+export interface CourseSubmission {
+    id: string;
+    code: string;
+    name?: string;
+    instructor?: string;
+    department?: string;
+    credits: number;
+    submitted_by?: string;
+    submitter_name?: string;
+    status: 'pending' | 'approved' | 'rejected';
+    review_notes?: string;
+    created_at: Date;
+}
+
+/**
+ * 提交新课程（需审核后才会添加到正式课程库）
+ */
+export const submitCourseForReview = async (
+    courseData: Partial<Course>,
+    submitterInfo?: { userId?: string; name?: string; email?: string }
+): Promise<{ data: CourseSubmission | null; error: any }> => {
+    // 检查课程代码是否已存在于正式表
+    const existingCourse = await getCourseByCode(courseData.code || '');
+    if (existingCourse) {
+        return { data: null, error: { message: 'COURSE_EXISTS', details: 'This course code already exists in the database.' } };
+    }
+
+    // 检查是否有相同代码的待审核提交
+    const { data: pendingSubmission } = await supabase
+        .from('course_submissions')
+        .select('id')
+        .eq('code', courseData.code?.toUpperCase())
+        .eq('status', 'pending')
+        .single();
+
+    if (pendingSubmission) {
+        return { data: null, error: { message: 'SUBMISSION_PENDING', details: 'A submission for this course code is already pending review.' } };
+    }
+
+    // 创建新的提交记录
+    const { data, error } = await supabase
+        .from('course_submissions')
+        .insert({
+            code: courseData.code?.toUpperCase(),
+            name: courseData.name,
+            instructor: courseData.instructor,
+            department: courseData.department,
+            credits: courseData.credits || 3,
+            submitted_by: submitterInfo?.userId,
+            submitter_name: submitterInfo?.name,
+            submitter_email: submitterInfo?.email,
+            status: 'pending'
+        })
+        .select()
+        .single();
+
+    if (error) {
+        return { data: null, error };
+    }
+
+    return {
+        data: {
+            ...data,
+            created_at: new Date(data.created_at)
+        } as CourseSubmission,
+        error: null
+    };
+};
+
+/**
+ * 获取用户自己的课程提交记录
+ */
+export const getUserCourseSubmissions = async (userId: string): Promise<CourseSubmission[]> => {
+    const { data, error } = await supabase
+        .from('course_submissions')
+        .select('*')
+        .eq('submitted_by', userId)
+        .order('created_at', { ascending: false });
+
+    if (error || !data) {
+        console.error('Error fetching user submissions:', error);
+        return [];
+    }
+
+    return data.map(item => ({
+        ...item,
+        created_at: new Date(item.created_at)
+    })) as CourseSubmission[];
+};
+
+/**
+ * 获取所有待审核的课程提交（管理员用）
+ */
+export const getPendingCourseSubmissions = async (): Promise<CourseSubmission[]> => {
+    const { data, error } = await supabase
+        .from('course_submissions')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true });
+
+    if (error || !data) {
+        console.error('Error fetching pending submissions:', error);
+        return [];
+    }
+
+    return data.map(item => ({
+        ...item,
+        created_at: new Date(item.created_at)
+    })) as CourseSubmission[];
+};
+
+/**
+ * 批准课程提交（管理员用）
+ */
+export const approveCourseSubmission = async (
+    submissionId: string,
+    reviewerId: string,
+    notes?: string
+): Promise<{ success: boolean; courseId?: string; error?: string }> => {
+    const { data, error } = await supabase.rpc('approve_course_submission', {
+        submission_id: submissionId,
+        reviewer_id: reviewerId,
+        notes: notes || null
+    });
+
+    if (error) {
+        console.error('Error approving submission:', error);
+        return { success: false, error: error.message };
+    }
+
+    return data as { success: boolean; courseId?: string; error?: string };
+};
+
+/**
+ * 拒绝课程提交（管理员用）
+ */
+export const rejectCourseSubmission = async (
+    submissionId: string,
+    reviewerId: string,
+    notes: string
+): Promise<{ success: boolean; error?: string }> => {
+    const { data, error } = await supabase.rpc('reject_course_submission', {
+        submission_id: submissionId,
+        reviewer_id: reviewerId,
+        notes: notes
+    });
+
+    if (error) {
+        console.error('Error rejecting submission:', error);
+        return { success: false, error: error.message };
+    }
+
+    return data as { success: boolean; error?: string };
+};
+
+/**
+ * 取消自己的待审核提交
+ */
+export const cancelCourseSubmission = async (submissionId: string): Promise<{ error: any }> => {
+    const { error } = await supabase
+        .from('course_submissions')
+        .delete()
+        .eq('id', submissionId)
+        .eq('status', 'pending');
+
+    return { error };
+};

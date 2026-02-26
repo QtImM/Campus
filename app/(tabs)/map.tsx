@@ -3,7 +3,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Building, Crosshair, Heart, Image as ImageIcon, MapPin, MapPinOff, MessageCircle, Plus, Utensils, X } from 'lucide-react-native';
+import { Building, Crosshair, Heart, Image as ImageIcon, MapPin, MessageCircle, Utensils, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -351,7 +351,9 @@ const generateMapHTML = (
         if (${showFoodMap}) foodLayer.addTo(map);
         if (${showBuildingMap}) buildingLayer.addTo(map);
         
+        /* [COMMENTED] Post Markers - 地图上的蓝色光标标记已禁用
         ${markers}
+        */
         ${foodMarkers}
         ${buildingMarkers}
         
@@ -425,7 +427,7 @@ const generateMapHTML = (
             </svg>
         \`;
 
-        // Map Click Handler
+        /* [COMMENTED] Map Click Handler - 点击地图发布评价功能已禁用
         map.on('click', function(e) {
             var lat = e.latlng.lat;
             var lng = e.latlng.lng;
@@ -452,6 +454,7 @@ const generateMapHTML = (
                 lng: lng
             }));
         });
+        */
         
         // Send message when post marker clicked
         map.on('popupopen', function(e) {
@@ -878,10 +881,12 @@ export default function MapScreen() {
         try {
             const data = JSON.parse(event.nativeEvent.data);
 
+            /* [COMMENTED] 点击地图发布评价功能已禁用
             if (data.type === 'map_clicked') {
                 setPendingLocation({ lat: data.lat, lng: data.lng });
                 return;
             }
+            */
 
             if (data.type === 'popup_open') {
                 const lat = Number(data.lat);
@@ -1046,7 +1051,7 @@ export default function MapScreen() {
             </View>
 
 
-            {/* Filter Bar */}
+            {/* [COMMENTED] Filter Bar - 最新/最热/最多查看/我的标记已禁用
             <View style={styles.filterContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
                     {FILTERS.map((filter) => {
@@ -1076,9 +1081,10 @@ export default function MapScreen() {
                     })}
                 </ScrollView>
             </View>
+            */}
 
             <View style={styles.bottomControls}>
-                {/* Marker Toggle Button (Top of group) */}
+                {/* [COMMENTED] Marker Toggle Button (隐藏按钮) - 已禁用
                 <TouchableOpacity
                     style={[styles.iconButton, !markersVisible && { backgroundColor: '#F3F4F6' }]}
                     onPress={() => setMarkersVisible(!markersVisible)}
@@ -1092,6 +1098,7 @@ export default function MapScreen() {
                         {markersVisible ? t('map.overlay.hide') : t('map.overlay.show')}
                     </Text>
                 </TouchableOpacity>
+                */}
 
                 <TouchableOpacity style={styles.iconButton} onPress={handleFindClassroom}>
                     <Building size={20} color="#4B0082" />
@@ -1140,6 +1147,7 @@ export default function MapScreen() {
                     </TouchableOpacity>
                 )}
 
+                {/* [COMMENTED] 活动按钮 (Add Button) - 已禁用
                 <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: fadeAnim }] }}>
                     <TouchableOpacity
                         style={styles.addButton}
@@ -1149,9 +1157,10 @@ export default function MapScreen() {
                         <Plus size={28} color="#fff" />
                     </TouchableOpacity>
                 </Animated.View>
+                */}
             </View>
 
-            {/* Floating Post Cards */}
+            {/* [COMMENTED] Floating Post Cards - 浮动帖子卡片已禁用
             {
                 markersVisible && (
                     <ScrollView
@@ -1183,6 +1192,7 @@ export default function MapScreen() {
                     </ScrollView>
                 )
             }
+            */}
 
             {/* Post Detail Modal */}
             <Modal

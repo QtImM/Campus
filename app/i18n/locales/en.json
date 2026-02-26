@@ -40,7 +40,7 @@
     },
     "courses": {
         "title": "Course Review",
-        "search_placeholder": "Search course code, name or instructor...",
+        "search_placeholder": "Enter course code...",
         "add_new_course": "Add New Course",
         "no_courses_found": "No courses found"
     },

@@ -40,7 +40,7 @@
     },
     "courses": {
         "title": "課程點評",
-        "search_placeholder": "搜尋課程代碼、名稱或講師...",
+        "search_placeholder": "輸入課程代碼...",
         "add_new_course": "添加新課程",
         "no_courses_found": "未找到相關課程"
     },

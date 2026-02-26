@@ -40,7 +40,7 @@
     },
     "courses": {
         "title": "课程点评",
-        "search_placeholder": "搜索课程代码、名称或讲师...",
+        "search_placeholder": "输入课程代码...",
         "add_new_course": "添加新课程",
         "no_courses_found": "未找到相关课程"
     },
