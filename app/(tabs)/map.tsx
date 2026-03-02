@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
+import storage from '../../lib/storage';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -646,7 +646,7 @@ export default function MapScreen() {
 
     useEffect(() => {
         if (buildingsData !== CAMPUS_BUILDINGS) {
-            AsyncStorage.setItem('savedBuildingsData', JSON.stringify(buildingsData)).catch(e => console.error(e));
+            storage.setItem('savedBuildingsData', JSON.stringify(buildingsData)).catch((e: any) => console.error(e));
         }
     }, [buildingsData]);
 

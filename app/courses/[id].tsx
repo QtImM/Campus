@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
+import storage from '../../lib/storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Info, MessageCircle, MessageSquare, Plus, Send, Star, Tag, ThumbsUp, UserPlus, Users, X } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
@@ -109,7 +109,7 @@ export default function CourseDetailScreen() {
 
         // Load liked reviews from local storage (for all course types)
         try {
-            const likedStr = await AsyncStorage.getItem('hkcampus_liked_reviews');
+            const likedStr = await storage.getItem('hkcampus_liked_reviews');
             if (likedStr) setLikedReviewIds(JSON.parse(likedStr));
         } catch (e) {
             console.error('Error loading liked reviews:', e);
@@ -310,7 +310,7 @@ export default function CourseDetailScreen() {
         setLikedReviewIds(newLikedIds);
 
         try {
-            await AsyncStorage.setItem('hkcampus_liked_reviews', JSON.stringify(newLikedIds));
+            await storage.setItem('hkcampus_liked_reviews', JSON.stringify(newLikedIds));
         } catch (e) {
             console.error('Error saving like status:', e);
         }
