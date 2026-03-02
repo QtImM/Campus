@@ -7,7 +7,7 @@ def consolidate():
     all_data = []
 
     # 1. Physics (53)
-    for f in ['physics_final_v2.csv', 'physics_research_data.csv', 'physics_support_data.csv']:
+    for f in ['../../data/parsed/physics_final_v2.csv', '../../data/parsed/physics_research_data.csv', '../../data/parsed/physics_support_data.csv']:
         if os.path.exists(f):
             with open(f, 'r', encoding='utf-8') as file:
                 reader = csv.reader(file)
@@ -15,15 +15,15 @@ def consolidate():
                 all_data.extend(list(reader))
 
     # 2. Computer Science (40)
-    if os.path.exists('cs_parsed.csv'):
-        with open('cs_parsed.csv', 'r', encoding='utf-8') as f:
+    if os.path.exists('../../data/parsed/cs_parsed.csv'):
+        with open('../../data/parsed/cs_parsed.csv', 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             next(reader)
             all_data.extend(list(reader))
 
     # 3. Mathematics (21)
-    if os.path.exists('math_final_v2.csv'):
-        with open('math_final_v2.csv', 'r', encoding='utf-8') as f:
+    if os.path.exists('../../data/parsed/math_final_v2.csv'):
+        with open('../../data/parsed/math_final_v2.csv', 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             next(reader)
             all_data.extend(list(reader))
@@ -93,7 +93,7 @@ def consolidate():
     all_data.extend(ava_data)
 
     # Write
-    with open('hkbu_teachers_exhaustive_v2.csv', 'w', newline='', encoding='utf-8') as f:
+    with open('../../data/parsed/hkbu_teachers_exhaustive_v2.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerows(all_data)

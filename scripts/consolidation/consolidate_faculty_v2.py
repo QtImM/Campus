@@ -5,13 +5,13 @@ final_data = []
 
 # 1. Load CS (40)
 try:
-    with open('hkbu_cs_faculty_parsed_v2.csv', 'r', encoding='utf-8') as f:
+    with open('../../data/parsed/hkbu_cs_faculty_parsed_v2.csv', 'r', encoding='utf-8') as f:
         final_data.extend(list(csv.DictReader(f)))
 except: print("CS file not found")
 
 # 2. Load Comm (67)
 try:
-    with open('hkbu_comm_faculty_parsed_v2.csv', 'r', encoding='utf-8') as f:
+    with open('../../data/parsed/hkbu_comm_faculty_parsed_v2.csv', 'r', encoding='utf-8') as f:
         final_data.extend(list(csv.DictReader(f)))
 except: print("Comm file not found")
 
@@ -98,7 +98,7 @@ add_batch("Creative Arts", "Music", [
 
 # Final Write
 fieldnames = ['Faculty', 'Department', 'Name', 'Title', 'ImageURL', 'Email', 'SourceURL']
-with open('hkbu_teachers.csv', 'w', newline='', encoding='utf-8') as f:
+with open('../../data/parsed/hkbu_teachers.csv', 'w', newline='', encoding='utf-8') as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(final_data)
