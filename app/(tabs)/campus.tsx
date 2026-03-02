@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import storage from '../../lib/storage';
 import { Building, Check, X as CloseIcon, Globe, Plus } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -83,7 +83,7 @@ export default function CampusScreen() {
     useEffect(() => {
         const checkEULA = async () => {
             try {
-                const accepted = await AsyncStorage.getItem('eula_accepted');
+                const accepted = await storage.getItem('eula_accepted');
                 if (accepted !== 'true') {
                     setEulaVisible(true);
                 }
@@ -105,7 +105,7 @@ export default function CampusScreen() {
 
     const handleAcceptEULA = async () => {
         try {
-            await AsyncStorage.setItem('eula_accepted', 'true');
+            await storage.setItem('eula_accepted', 'true');
             setEulaVisible(false);
         } catch (e) {
             console.error('EULA accept error:', e);

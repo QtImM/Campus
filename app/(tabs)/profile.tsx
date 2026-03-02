@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatDistanceToNow } from 'date-fns';
+import storage from '../../lib/storage';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -164,7 +164,7 @@ export default function ProfileScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         await signOut();
-                        await AsyncStorage.removeItem(DEMO_MODE_KEY);
+                        await storage.removeItem(DEMO_MODE_KEY);
                         router.replace('/(auth)/login');
                     }
                 }
