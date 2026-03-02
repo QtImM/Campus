@@ -61,13 +61,13 @@ final_rows = []
 
 # CS
 try:
-    with open('hkbu_cs_faculty_parsed_v2.csv', 'r', encoding='utf-8') as f:
+    with open('../../data/parsed/hkbu_cs_faculty_parsed_v2.csv', 'r', encoding='utf-8') as f:
         final_rows.extend(list(csv.DictReader(f)))
 except: print("CS file not found")
 
 # Comm
 try:
-    with open('hkbu_comm_faculty_parsed_v2.csv', 'r', encoding='utf-8') as f:
+    with open('../../data/parsed/hkbu_comm_faculty_parsed_v2.csv', 'r', encoding='utf-8') as f:
         final_rows.extend(list(csv.DictReader(f)))
 except: print("Comm file not found")
 
@@ -106,7 +106,7 @@ for name in scm_names:
 
 # Final Write
 fieldnames = ['Faculty', 'Department', 'Name', 'Title', 'ImageURL', 'Email', 'SourceURL']
-with open('hkbu_teachers_final.csv', 'w', newline='', encoding='utf-8') as f:
+with open('../../data/parsed/hkbu_teachers_final.csv', 'w', newline='', encoding='utf-8') as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(final_rows)

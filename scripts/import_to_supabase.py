@@ -12,9 +12,10 @@ SUPABASE_URL = 'https://baihmybeajpfitionsbv.supabase.co'
 SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhaWhteWJlYWpwZml0aW9uc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1Mzc4MjksImV4cCI6MjA4NjExMzgyOX0.wS-XzFRyZAJhaxl21rT32Ij2dCbWLDdCGl1hObk9OOo'
 TABLE_NAME = 'teachers'
 
+
 def import_data():
-    csv_file = 'hkbu_teachers_master_v3.csv'
-    
+    csv_file = '../data/parsed/hkbu_teachers_master_v3.csv'
+
     headers = {
         "apikey": SUPABASE_ANON_KEY,
         "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
@@ -23,7 +24,7 @@ def import_data():
     }
 
     url = f"{SUPABASE_URL}/rest/v1/{TABLE_NAME}"
-    
+
     with open(csv_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         records = []
@@ -38,19 +39,22 @@ def import_data():
                 "source_url": row['SourceURL']
             }
             records.append(record)
-    
+
     # 分批导入 (每批 50 条)
     batch_size = 50
     for i in range(0, len(records), batch_size):
         batch = records[i:i+batch_size]
         try:
-            response = requests.post(url, headers=headers, data=json.dumps(batch), verify=False)
+            response = requests.post(
+                url, headers=headers, data=json.dumps(batch), verify=False)
             if response.status_code in [200, 201]:
                 print(f"成功导入批次 {i//batch_size + 1}")
             else:
-                print(f"导入批次 {i//batch_size + 1} 失败: {response.status_code} - {response.text}")
+                print(
+                    f"导入批次 {i//batch_size + 1} 失败: {response.status_code} - {response.text}")
         except Exception as e:
             print(f"请求异常: {e}")
+
 
 if __name__ == '__main__':
     import_data()
