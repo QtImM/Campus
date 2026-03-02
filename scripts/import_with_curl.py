@@ -9,11 +9,10 @@ SUPABASE_URL = 'https://baihmybeajpfitionsbv.supabase.co'
 SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhaWhteWJlYWpwZml0aW9uc2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1Mzc4MjksImV4cCI6MjA4NjExMzgyOX0.wS-XzFRyZAJhaxl21rT32Ij2dCbWLDdCGl1hObk9OOo'
 TABLE_NAME = 'teachers'
 
-
 def import_with_curl():
     csv_file = 'hkbu_teachers_master_v3.csv'
     url = f"{SUPABASE_URL}/rest/v1/{TABLE_NAME}"
-
+    
     # 1. Clear old data to prevent duplicates
     print("正在清空旧数据以防止重复...")
     # SQL query style deletion via PosgREST: delete where id is not null (guaranteed to match all)
@@ -27,7 +26,7 @@ def import_with_curl():
     try:
         subprocess.run(delete_cmd, capture_output=True, text=True)
         print("旧数据清空指令已发送")
-        time.sleep(1)  # Give Supabase a moment
+        time.sleep(1) # Give Supabase a moment
     except Exception as e:
         print(f"清空数据指令执行失败: {e}")
 
@@ -38,7 +37,7 @@ def import_with_curl():
         for row in reader:
             image_url = row['ImageURL']
             source_url = row['SourceURL']
-
+            
             # Domain prefix mapping for photo fixes
             if image_url and not image_url.startswith('http'):
                 clean_img = image_url.lstrip('/')
@@ -54,7 +53,7 @@ def import_with_curl():
                     image_url = f'https://phys.hkbu.edu.hk/{clean_img}'
                 else:
                     image_url = f'https://www.hkbu.edu.hk/{clean_img}'
-
+            
             records.append({
                 "faculty": row['Faculty'],
                 "department": row['Department'],
@@ -71,10 +70,10 @@ def import_with_curl():
     for i in range(0, len(records), batch_size):
         batch = records[i:i+batch_size]
         print(f"正在导入批次 {i//batch_size + 1}...")
-
+        
         with open(temp_file, 'w', encoding='utf-8') as tf:
             json.dump(batch, tf)
-
+        
         cmd = [
             "curl", "-k", "-X", "POST", url,
             "-H", f"apikey: {SUPABASE_ANON_KEY}",
@@ -83,17 +82,16 @@ def import_with_curl():
             "-H", "Prefer: return=minimal",
             "-d", f"@{temp_file}"
         ]
-
+        
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode == 0:
             print(f"批次 {i//batch_size + 1} 导入成功")
         else:
             print(f"批次 {i//batch_size + 1} 导入失败: {result.stderr}")
-
+    
     if os.path.exists(temp_file):
         os.remove(temp_file)
     print("全量数据同步完成！")
-
 
 if __name__ == '__main__':
     import_with_curl()
